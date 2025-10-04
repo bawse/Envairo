@@ -1,0 +1,5 @@
+# Add any files you don't want to commit
+.DS_Store
+node_modules/
+*.log
+

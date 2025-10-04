@@ -1,0 +1,262 @@
+/* Neutral iOS Glass Overlay - No colored gradients */
+:host, .ai-glass-root { 
+  all: initial; 
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.ai-glass-container{
+  position: fixed; 
+  z-index: 2147483640;
+  width: clamp(340px, 42vw, 520px);
+  display: none;
+  pointer-events: none; /* Click-through container */
+  transition: top 0.3s ease, right 0.3s ease, bottom 0.3s ease, left 0.3s ease;
+  will-change: transform;
+}
+
+.ai-glass-container.is-dragging {
+  transition: none;
+}
+
+/* Position variants */
+.ai-glass-container.pos-top-right{
+  top: 6vh; 
+  right: 4vw;
+  bottom: auto;
+  left: auto;
+}
+
+.ai-glass-container.pos-top-left{
+  top: 6vh; 
+  left: 4vw;
+  bottom: auto;
+  right: auto;
+}
+
+.ai-glass-container.pos-bottom-right{
+  bottom: 6vh; 
+  right: 4vw;
+  top: auto;
+  left: auto;
+}
+
+.ai-glass-container.pos-bottom-left{
+  bottom: 6vh; 
+  left: 4vw;
+  top: auto;
+  right: auto;
+}
+
+.ai-glass-container.pos-center{
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  bottom: auto;
+  right: auto;
+}
+
+.ai-glass-container.is-open{ 
+  display: block; 
+}
+
+.ai-glass-panel{
+  position: relative;
+  background: rgba(255,255,255,0.18);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 22px;
+  box-shadow: 0 22px 60px rgba(0,0,0,0.22);
+  color: #0b0f13;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 500;
+  padding: 20px;
+  pointer-events: auto; /* Interactive panel */
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-glass-panel::before{
+  content: ""; 
+  position: absolute; 
+  inset: -1px; 
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.24) inset;
+  pointer-events: none;
+}
+
+.ai-drag-handle {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: rgba(11, 15, 19, 0.4);
+  border-radius: 6px;
+  transition: background 0.2s ease, color 0.2s ease;
+  z-index: 10;
+  user-select: none;
+}
+
+.ai-drag-handle:hover {
+  background: rgba(255, 255, 255, 0.35);
+  color: rgba(11, 15, 19, 0.7);
+}
+
+.ai-drag-handle:active {
+  cursor: grabbing;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.ai-drag-handle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ai-title{ 
+  margin: 0; 
+  font-weight: 800; 
+  letter-spacing: -0.01em; 
+  font-size: 19px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.ai-pill{ 
+  padding: 10px 12px; 
+  border-radius: 16px; 
+  background: rgba(255,255,255,0.2);
+  -webkit-backdrop-filter: blur(16px) saturate(140%); 
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.5); 
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.ai-input{ 
+  min-height: 100px; 
+  max-height: 160px;
+  padding: 14px 16px; 
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.55); 
+  background: rgba(255,255,255,0.18);
+  -webkit-backdrop-filter: blur(18px) saturate(170%); 
+  backdrop-filter: blur(18px) saturate(170%);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05) inset; 
+  color: #0b0f13; 
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  transition: box-shadow .25s ease, background .25s ease, border-color .25s ease;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.ai-input::placeholder{ 
+  color: rgba(11,15,19,0.64); 
+  font-weight: 500;
+}
+
+.ai-input:focus{
+  border-color: rgba(60,130,255,0.65);
+  box-shadow: 0 0 0 6px rgba(60,130,255,0.18), 0 10px 28px rgba(60,130,255,0.22);
+}
+
+.ai-actions{ 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 10px; 
+  margin: 0; 
+  flex-shrink: 0;
+}
+
+.ai-btn{ 
+  padding: 13px 18px; 
+  border-radius: 16px; 
+  border: 1px solid rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.18); 
+  -webkit-backdrop-filter: blur(16px) saturate(170%); 
+  backdrop-filter: blur(16px) saturate(170%);
+  font-weight: 700; 
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  color: #0b0f13;
+  transition: transform .08s ease, box-shadow .25s ease, background .25s ease;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.6) inset;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.ai-btn:hover{ 
+  background: rgba(255,255,255,0.24); 
+  transform: translateY(-1px);
+}
+
+.ai-btn:active{ 
+  transform: translateY(0); 
+}
+
+.ai-btn:disabled{
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-output{ 
+  min-height: 120px; 
+  padding: 16px;
+  border-radius: 18px; 
+  border: 1px solid rgba(255,255,255,0.55); 
+  background: rgba(255,255,255,0.16);
+  -webkit-backdrop-filter: blur(16px) saturate(170%); 
+  backdrop-filter: blur(16px) saturate(170%);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.10) inset, 0 10px 28px rgba(0,0,0,0.10);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+/* Hide scrollbars but keep functionality */
+.ai-input::-webkit-scrollbar,
+.ai-output::-webkit-scrollbar,
+.ai-glass-panel::-webkit-scrollbar { 
+  display: none; 
+}
+
+.ai-input,
+.ai-output {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .ai-glass-panel, .ai-input, .ai-btn, .ai-output, .ai-pill{
+    background: rgba(255,255,255,0.88);
+  }
+}
+

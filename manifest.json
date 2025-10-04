@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome AI Test Extension",
+  "version": "1.0.0",
+  "description": "Testing Chrome Built-in AI Prompt API",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "Test AI"
+  },
+  "background": {
+    "service_worker": "src/bg.js"
+  },
+  "commands": {
+    "toggle-glass": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Toggle Glass Overlay"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/overlay.js"],
+      "css": ["src/overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/overlay.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
+
