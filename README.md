@@ -2,6 +2,14 @@
 
 A modern, glass-morphism styled Chrome extension to test the Chrome Built-in AI Prompt API for the Google Chrome Built-in AI Challenge 2025.
 
+## 🌱 Sustainability Shopping Advisor (In Development)
+
+This extension is being enhanced with a **Sustainability Shopping Advisor** feature that provides real-time sustainability scoring for products on e-commerce websites.
+
+**Current Status**: Phase 1 - Amazon Product Detection & HTML Extraction ✅
+
+See [TESTING.md](TESTING.md) for detailed testing instructions.
+
 ## 📁 Project Structure
 
 ```
