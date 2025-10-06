@@ -481,8 +481,25 @@ function initializeSustainabilityAdvisor() {
     isRunning = false;
   };
   
-  // Try extraction after a short delay (wait for dynamic content)
-  setTimeout(extractWhenReady, 1000);
+  // Start extraction as soon as possible
+  // Try multiple strategies to catch the content when ready
+  
+  // Strategy 1: Try immediately (might already be loaded)
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    // DOM is already loaded, try extraction immediately
+    setTimeout(extractWhenReady, 0);
+  }
+  
+  // Strategy 2: Wait for DOMContentLoaded if not yet fired
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(extractWhenReady, 100);
+    });
+  }
+  
+  // Strategy 3: Fallback - try after a short delay for dynamically loaded content
+  // Amazon loads some content via JS after initial page load
+  setTimeout(extractWhenReady, 300);
 }
 
 // Run the sustainability advisor initialization
