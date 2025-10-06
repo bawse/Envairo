@@ -34,38 +34,317 @@ function detectAmazonProductPage() {
 }
 
 /**
- * Extracts the main product information container from Amazon product page
- * @returns {HTMLElement|null} The product info container element or null
+ * Extracts relevant sections from the Amazon product page using targeted selectors
+ * This dramatically reduces the amount of content that needs LLM processing
+ * @returns {Array} Array of section objects with {method, selector, score, text, html}
  */
-function extractAmazonProductInfo() {
-  // Amazon typically uses these containers for product information
-  const selectors = [
-    '#dp',                          // Main product details container
-    '#dp-container',                // Alternative container
-    '[data-feature-name="dp"]',     // Data attribute selector
-    '#ppd',                         // Product page details
-    '#centerCol'                    // Center column with product info
+function extractRelevantSections() {
+  console.log('[Sustainability Advisor] 🔍 Starting targeted section extraction...');
+  
+  // Keywords for relevance detection
+  const MATERIAL_KEYWORDS = [
+    'material', 'materials', 'fabric', 'composition', 'shell', 'lining', 'upper', 'outsole', 'insole',
+    'leather', 'cotton', 'polyester', 'nylon', 'viscose', 'elastane', 'spandex', 'wool', 'silk',
+    'hemp', 'linen', 'down', 'fill', 'wood', 'rubber', 'eva', 'tpu', 'tpe', 'pu', 'bpa', 'microfiber',
+    'plastic', 'metal', 'aluminum', 'steel', 'glass', 'ceramic', 'bamboo', 'cork',
+    'rayon', 'acrylic', 'modal', 'tencel', 'lyocell', 'acetate', 'denim', 'canvas', 'fleece',
+    'mesh', 'suede', 'velvet', 'satin', 'chiffon', 'jersey', 'knit', 'woven',
+    'crafted', 'care instructions', 'wash', 'breathability', 'moisture-wicking'
   ];
   
-  let productContainer = null;
+  const SUSTAINABILITY_KEYWORDS = [
+    'sustainab', 'recycled', 'recyclable', 'biodegrad', 'compostable', 'organic', 'fsc', 'pefc',
+    'oeko-tex', 'gots', 'fair trade', 'bluesign', 'carbon neutral', 'carbon-neutral', 'b corp',
+    'waterless', 'eco', 'environment', 'packaging', 'responsibly', 'ethically', 'renewable',
+    'climate pledge', 'grs', 'certified', 'certification', 'nordic swan', 'ecolabel', 'safer chemicals',
+    'manufacturing practices'
+  ];
   
-  // Try each selector until we find one
-  for (const selector of selectors) {
-    productContainer = document.querySelector(selector);
-    if (productContainer) {
-      if (SUSTAINABILITY_DEBUG) {
-        console.log(`[Sustainability Advisor] Found product container using selector: ${selector}`);
-      }
-      break;
+  const INGREDIENTS_KEYWORDS = [
+    'ingredient', 'inci', 'allergen', 'nutrition', 'nutritional', 'additives', 'preservatives',
+    'paraben', 'sulfate', 'phthalate', 'fragrance', 'safety information', 'directions', 'usage'
+  ];
+  
+  const KEYWORDS = [...MATERIAL_KEYWORDS, ...SUSTAINABILITY_KEYWORDS, ...INGREDIENTS_KEYWORDS];
+  
+  // TWO-TIER APPROACH: More general, less keyword-dependent
+  
+  // Tier 1: Always include (structure indicates high relevance)
+  // These sections almost always contain material/product/sustainability info
+  const ALWAYS_INCLUDE_SELECTORS = [
+    '#productTitle',                          // Product name
+    '#feature-bullets',                       // Key features ("About this item")
+    '#productFactsDesktop_feature_div',       // Product facts (fabric type, care, origin, "About this item")
+    '#productFactsDesktopExpander',           // Product facts expander content
+    '#productOverview_feature_div',           // Product specs table
+    '#productDetails_techSpec_section_1',     // Technical specifications
+    '#productDetails_detailBullets_sections1',// Product details bullets
+    '#prodDetails',                           // Legacy product details
+    '.prodDetTable',                          // Product details table
+    '#productDescription',                    // Product description
+    '#aplus',                                 // A+ content (manufacturer content)
+    '#aplus_feature_div',                     // A+ content container
+    '#climatePledgeFriendly',                 // Climate Pledge Friendly section
+    '#certificateBadge_feature_div',          // Certification badges
+    '#cr-badge-row',                          // Climate pledge badge row
+    '#badge-packaging'                        // Packaging badges
+  ];
+  
+  // Tier 2: Only include if keywords match (for ambiguous sections)
+  const KEYWORD_FILTERED_SELECTORS = [
+    '#detailBullets_feature_div',  // Can contain mixed content
+    '#poExpander'                   // Mobile product overview (may be redundant)
+  ];
+  
+  // All known selectors combined (for duplicate detection)
+  const ALL_KNOWN_SELECTORS = [...ALWAYS_INCLUDE_SELECTORS, ...KEYWORD_FILTERED_SELECTORS];
+  
+  function normText(s) {
+    return (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+  
+  function containsAnyKeyword(text, keywords) {
+    const t = normText(text);
+    return keywords.some(k => t.includes(k));
+  }
+  
+  // Detect material/sustainability indicators by pattern (catches unknown materials)
+  function hasMaterialIndicators(text) {
+    const patterns = [
+      /made (of|from|with)/i,                    // "made of X", "made from X"
+      /composed of/i,                            // "composed of X"
+      /crafted from/i,                           // "crafted from X"
+      /material:?\s*[\w\-]+/i,                   // "Material: X" or "Material X"
+      /fabric:?\s*[\w\-]+/i,                     // "Fabric: X"
+      /fabric type/i,                            // "Fabric type" (structured data)
+      /care instructions/i,                      // "Care instructions" (often near materials)
+      /\d+%\s+[\w\-]+/i,                         // "50% cotton", "100% recycled"
+      /ingredients?:/i,                          // "Ingredients:", "Ingredient:"
+      /contains?:/i,                             // "Contains:", "Contain:"
+      /certified (by|to)/i,                      // "certified by X", "certified to X"
+      /certification/i,                          // "certification"
+      /upper:?\s*[\w\-]+/i,                      // "Upper: leather" (footwear)
+      /outsole:?\s*[\w\-]+/i,                    // "Outsole: rubber"
+      /insole:?\s*[\w\-]+/i,                     // "Insole: foam"
+      /lining:?\s*[\w\-]+/i,                     // "Lining: polyester"
+      /fill:?\s*[\w\-]+/i,                       // "Fill: down"
+      /shell:?\s*[\w\-]+/i,                      // "Shell: nylon"
+      /construction:?\s*[\w\-]+/i,               // "Construction: X"
+      /finish:?\s*[\w\-]+/i,                     // "Finish: X"
+      /viscose|bamboo|spandex/i,                 // Common sustainable materials
+      /high-quality material/i,                  // Common material callouts
+      /product details/i                         // Section header that often has materials
+    ];
+    return patterns.some(p => p.test(text));
+  }
+  
+  // 1. Collect by known selectors (TWO-TIER APPROACH)
+  function collectBySelectors() {
+    const sections = [];
+    
+    // TIER 1: Always include (no keyword filtering - structure indicates relevance)
+    for (const sel of ALWAYS_INCLUDE_SELECTORS) {
+      document.querySelectorAll(sel).forEach((el) => {
+        if (!el || !el.innerText?.trim()) return;
+        const text = el.innerText || '';
+        const normTextVal = normText(text);
+        
+        // Calculate base score by selector importance
+        let baseScore = 0.7;
+        if (sel === '#productTitle') baseScore = 0.9;
+        else if (sel === '#climatePledgeFriendly') baseScore = 0.85;
+        else if (sel === '#productFactsDesktop_feature_div') baseScore = 0.85;
+        else if (sel === '#productFactsDesktopExpander') baseScore = 0.85;
+        else if (sel === '#certificateBadge_feature_div') baseScore = 0.8;
+        else if (sel === '#productOverview_feature_div') baseScore = 0.75;
+        else if (sel === '#feature-bullets') baseScore = 0.75;
+        
+        // BONUS: Boost score if contains material indicators (pattern-based)
+        if (hasMaterialIndicators(text)) {
+          baseScore += 0.1;
+        }
+        
+        sections.push({
+          method: 'selector-always',
+          selector: sel,
+          score: baseScore,
+          text: text.trim().substring(0, 3000),
+          html: el.outerHTML.substring(0, 5000)
+        });
+      });
     }
+    
+    // TIER 2: Only include if keywords match (for ambiguous sections)
+    for (const sel of KEYWORD_FILTERED_SELECTORS) {
+      document.querySelectorAll(sel).forEach((el) => {
+        if (!el || !el.innerText?.trim()) return;
+        const text = el.innerText || '';
+        const normTextVal = normText(text);
+        
+        // Must contain keywords or material indicators
+        if (containsAnyKeyword(normTextVal, KEYWORDS) || hasMaterialIndicators(text)) {
+          sections.push({
+            method: 'selector-filtered',
+            selector: sel,
+            score: 0.7,
+            text: text.trim().substring(0, 3000),
+            html: el.outerHTML.substring(0, 5000)
+          });
+        }
+      });
+    }
+    
+    return sections;
   }
   
-  if (!productContainer) {
-    console.warn('[Sustainability Advisor] ⚠️ Could not find product container');
-    return null;
+  // 2. Collect by heading crawl
+  function collectByHeadings() {
+    const sections = [];
+    const candidates = Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6,[role="heading"],.aplus h3,.a-section h3'));
+    
+    for (const h of candidates) {
+      const headingText = h.innerText || '';
+      const normHeadingText = normText(headingText);
+      // Include if has keywords OR material indicators
+      if (!normHeadingText || !(containsAnyKeyword(normHeadingText, KEYWORDS) || hasMaterialIndicators(headingText))) continue;
+      
+      let blockText = h.innerText || '';
+      let score = 0.6;
+      
+      // First, try to capture following siblings
+      let node = h.nextElementSibling;
+      let steps = 0;
+      
+      while (node && steps < 10) {
+        if (node.matches('h1,h2,h3,h4,h5,h6,[role="heading"]')) break;
+        
+        const nodeText = node.innerText || '';
+        const txt = normText(nodeText);
+        // Include if has keywords OR material indicators, or if we're in first 3 siblings
+        if (txt && (containsAnyKeyword(txt, KEYWORDS) || hasMaterialIndicators(nodeText) || steps < 3)) {
+          blockText += '\n' + nodeText;
+          // Higher score if explicitly relevant
+          score = Math.max(score, (containsAnyKeyword(txt, KEYWORDS) || hasMaterialIndicators(nodeText)) ? 0.7 : 0.6);
+        } else if (steps > 5) {
+          break;
+        }
+        node = node.nextElementSibling;
+        steps++;
+      }
+      
+      // If we didn't capture much content, try capturing parent container
+      // This helps with nested structures like #climatePledgeFriendly
+      // BUT: Skip this if parent has an ID that's already in our selector list
+      if (blockText.length < 200) {
+        let parent = h.parentElement;
+        let depth = 0;
+        while (parent && depth < 3) {
+          // Skip if this parent is already covered by a selector
+          if (parent.id && ALL_KNOWN_SELECTORS.includes('#' + parent.id)) {
+            break;
+          }
+          
+          const parentText = parent.innerText || '';
+          if (parentText.length > blockText.length && parentText.length < 3000) {
+            const parentNormText = normText(parentText);
+            // Include if has keywords OR material indicators
+            if (containsAnyKeyword(parentNormText, KEYWORDS) || hasMaterialIndicators(parentText)) {
+              blockText = parentText;
+              score = 0.70; // Lower score for parent container (selector version is better)
+              break;
+            }
+          }
+          parent = parent.parentElement;
+          depth++;
+        }
+      }
+      
+      // Only add if we have substantial content
+      if (blockText.length < 100) continue;
+      
+      sections.push({
+        method: 'heading-crawl',
+        heading: h.innerText?.trim(),
+        score,
+        text: blockText.trim().substring(0, 3000),
+        html: h.outerHTML.substring(0, 5000)
+      });
+    }
+    return sections;
   }
   
-  return productContainer;
+  // 3. Deduplicate - improved to catch similar content
+  function dedupe(sections) {
+    const seen = new Set();
+    const result = [];
+    
+    for (const s of sections) {
+      const normTextVal = normText(s.text);
+      
+      // Create multiple signatures to catch duplicates
+      const sig1 = normTextVal.substring(0, 300);  // First 300 chars
+      const sig2 = normTextVal.substring(100, 400); // Middle section
+      
+      // Check if this is substantially similar to something we've seen
+      let isDuplicate = false;
+      for (const seenSig of seen) {
+        // If 80%+ of the shorter signature is contained in a seen signature, it's a duplicate
+        const shorter = sig1.length < seenSig.length ? sig1 : seenSig;
+        const longer = sig1.length >= seenSig.length ? sig1 : seenSig;
+        
+        if (longer.includes(shorter.substring(0, Math.floor(shorter.length * 0.8)))) {
+          isDuplicate = true;
+          break;
+        }
+      }
+      
+      if (!isDuplicate) {
+        seen.add(sig1);
+        result.push(s);
+      }
+    }
+    
+    return result;
+  }
+  
+  // 4. Rank by keyword family coverage (reduced bonus to avoid over-prioritizing)
+  function rank(sections) {
+    function familyScore(text) {
+      const t = normText(text);
+      let f = 0;
+      if (MATERIAL_KEYWORDS.some(k => t.includes(k))) f++;
+      if (SUSTAINABILITY_KEYWORDS.some(k => t.includes(k))) f++;
+      if (INGREDIENTS_KEYWORDS.some(k => t.includes(k))) f++;
+      return f;
+    }
+    
+    return sections
+      .map(s => ({
+        ...s,
+        // Reduced from 0.15 to 0.05 per family to avoid overwhelming product info
+        score: (s.score || 0.5) + 0.05 * familyScore(s.text || '')
+      }))
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
+  }
+  
+  // Execute extraction
+  const selectorSections = collectBySelectors();
+  const headingSections = collectByHeadings();
+  const allSections = [...selectorSections, ...headingSections];
+  const uniqueSections = dedupe(allSections);
+  const rankedSections = rank(uniqueSections);
+  
+  // Count sections by method for debugging
+  const alwaysIncluded = selectorSections.filter(s => s.method === 'selector-always').length;
+  const keywordFiltered = selectorSections.filter(s => s.method === 'selector-filtered').length;
+  
+  console.log(`[Sustainability Advisor] 📊 Extraction complete: ${rankedSections.length} relevant sections found`);
+  console.log(`[Sustainability Advisor]    - Always included (structural): ${alwaysIncluded}`);
+  console.log(`[Sustainability Advisor]    - Keyword filtered: ${keywordFiltered}`);
+  console.log(`[Sustainability Advisor]    - From headings: ${headingSections.length}`);
+  console.log(`[Sustainability Advisor]    - After deduplication: ${uniqueSections.length}`);
+  
+  return rankedSections;
 }
 
 /**
@@ -311,19 +590,19 @@ async function recursiveSummarizer(summarizer, parts, isFirstLevel = false) {
 
 /**
  * Uses Chrome's Summarizer API to extract sustainability-relevant information
- * Implements "summary of summaries" technique for large texts
- * Reference: https://developer.chrome.com/docs/ai/scale-summarization
- * @param {string} textContent The cleaned text content
+ * Now uses targeted extraction to process only relevant sections (much faster!)
+ * @param {Array} sections Array of extracted sections from extractRelevantSections()
  * @returns {Promise<Object>} Extracted product data
  */
-async function extractWithSummarizer(textContent) {
-  console.log('[Sustainability Advisor] 🤖 Analyzing product sustainability...');
+async function extractWithSummarizer(sections) {
+  const startTime = performance.now();
+  console.log('[Sustainability Advisor] 🤖 Analyzing extracted sections...');
   
   try {
     // Check if Summarizer API is available (Chrome 138+)
     if (!self.Summarizer) {
       console.warn('[Sustainability Advisor] ⚠️ Summarizer API not available. Enable at chrome://flags/#summarization-api-for-gemini-nano');
-      return { error: 'Summarizer API not available', fullText: textContent };
+      return { error: 'Summarizer API not available' };
     }
     
     // Check availability
@@ -331,49 +610,130 @@ async function extractWithSummarizer(textContent) {
     
     if (availability === 'no') {
       console.warn('[Sustainability Advisor] ⚠️ Summarizer not available');
-      return { error: 'Summarizer not available', fullText: textContent };
+      return { error: 'Summarizer not available' };
     }
     
     if (availability === 'after-download') {
       console.warn('[Sustainability Advisor] ⏳ Model needs to download. Trigger download by calling Summarizer.create()');
-      return { error: 'Model needs download', fullText: textContent };
+      return { error: 'Model needs download' };
     }
     
     // Create summarizer with sustainability-focused context
-    // Enhanced context to explicitly request material information
     const summarizer = await self.Summarizer.create({
       sharedContext: 'Extract sustainability and environmental information from this product. Focus on: materials (including exact material names like TPU, plastic, metal, etc.), environmental certifications (GRS, Climate Pledge, etc.), recycled content percentage, packaging sustainability, manufacturing origin, worker welfare, and environmental impact. Include specific material composition details. Ignore pricing, shipping, and general product features.',
-      type: 'key-points',      // Extract key points
-      format: 'plain-text',     // Plain text output
-      length: 'long'            // Long length for more detail
+      type: 'key-points',
+      format: 'plain-text',
+      length: 'long'
     });
     
-    const originalLength = textContent.length;
-    const chunkSize = summarizer.inputQuota;
-    const needsSplitting = originalLength > chunkSize;
+    const inputQuota = summarizer.inputQuota;
+    console.log(`[Sustainability Advisor] 📏 Summarizer input quota: ${inputQuota.toLocaleString()} chars`);
     
-    let summary;
-    let chunks = [];
+    // Build focused content from top-scored sections
+    // CRITICAL: Always include product title and key info first, then add sustainability
+    let focusedContent = '';
+    let sectionsUsed = [];
+    let totalChars = 0;
+    const targetSize = Math.floor(inputQuota * 0.85); // Use 85% of quota to be safe
     
-    if (!needsSplitting) {
-      // Text is small enough to process in one go
-      if (SUSTAINABILITY_DEBUG) {
-        console.log('[Sustainability Advisor] ✨ Processing in one chunk...');
+    console.log(`[Sustainability Advisor] 🎯 Selecting sections (target: ${targetSize.toLocaleString()} chars)...`);
+    
+    // Phase 1: Always include critical product info selectors (regardless of score)
+    const criticalSelectors = [
+      '#productTitle', 
+      '#productFactsDesktop_feature_div', 
+      '#productFactsDesktopExpander',
+      '#feature-bullets', 
+      '#productOverview_feature_div'
+    ];
+    const criticalSections = [];
+    const otherSections = [];
+    
+    for (const section of sections) {
+      if (section.selector && criticalSelectors.includes(section.selector)) {
+        criticalSections.push(section);
+      } else {
+        otherSections.push(section);
       }
-      summary = await summarizer.summarize(textContent);
-      chunks = [textContent];
-    } else {
-      // Split text into chunks with overlap
-      const chunkOverlap = 200; // Characters to overlap between chunks for context
-      chunks = splitTextIntoChunks(textContent, chunkSize, chunkOverlap);
-      
-      console.log(`[Sustainability Advisor] 📝 Processing ${originalLength.toLocaleString()} characters in ${chunks.length} chunks...`);
-      
-      // Use recursive summarization with parallel processing on first level
-      summary = await recursiveSummarizer(summarizer, chunks, true);
     }
     
+    console.log(`[Sustainability Advisor] 📌 Found ${criticalSections.length} critical product sections, ${otherSections.length} other sections`);
+    
+    // Add critical sections first
+    for (const section of criticalSections) {
+      const sectionText = section.text || '';
+      const potentialLength = totalChars + sectionText.length + 100;
+      
+      if (potentialLength < targetSize) {
+        const header = `\n\n[Section: ${section.selector}]`;
+        focusedContent += header + '\n' + sectionText;
+        totalChars = focusedContent.length;
+        sectionsUsed.push(section);
+      }
+    }
+    
+    // Phase 2: Add other high-scoring sections (sustainability, etc.)
+    for (const section of otherSections) {
+      const sectionText = section.text || '';
+      const potentialLength = totalChars + sectionText.length + 100;
+      
+      if (potentialLength < targetSize) {
+        const header = section.selector 
+          ? `\n\n[Section: ${section.selector}]` 
+          : `\n\n[Section: ${section.heading || 'Unknown'}]`;
+        
+        focusedContent += header + '\n' + sectionText;
+        totalChars = focusedContent.length;
+        sectionsUsed.push(section);
+      } else {
+        break; // Stop when we reach capacity
+      }
+    }
+    
+    console.log(`[Sustainability Advisor] ✂️ Selected ${sectionsUsed.length} sections (${totalChars.toLocaleString()} chars)`);
+    console.log('[Sustainability Advisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[Sustainability Advisor] 📄 FOCUSED CONTENT TO ANALYZE:');
+    console.log('[Sustainability Advisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    // Show each section with its score
+    sectionsUsed.forEach((section, idx) => {
+      const label = section.selector || section.heading || 'Unknown';
+      const preview = section.text.substring(0, 200).replace(/\n/g, ' ');
+      console.log(`[Sustainability Advisor] ${idx + 1}. [Score: ${section.score.toFixed(2)}] ${label}`);
+      console.log(`[Sustainability Advisor]    Preview: ${preview}...`);
+    });
+    
+    console.log('[Sustainability Advisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    // Show full focused content in a collapsible group
+    console.groupCollapsed('[Sustainability Advisor] 📋 Full Focused Content (click to expand)');
+    console.log(focusedContent);
+    console.groupEnd();
+    
+    // Verify we're within quota
+    const measuredTokens = await summarizer.measureInputUsage(focusedContent);
+    console.log(`[Sustainability Advisor] ⚖️ Content size check: ${measuredTokens.toLocaleString()} / ${inputQuota.toLocaleString()} tokens (${Math.round(measuredTokens / inputQuota * 100)}%)`);
+    
+    if (measuredTokens > inputQuota) {
+      console.warn('[Sustainability Advisor] ⚠️ Content exceeds quota, trimming...');
+      // Trim to fit
+      const ratio = inputQuota / measuredTokens * 0.9; // 90% to be safe
+      focusedContent = focusedContent.substring(0, Math.floor(focusedContent.length * ratio));
+      console.log(`[Sustainability Advisor] ✂️ Trimmed to ${focusedContent.length.toLocaleString()} chars`);
+    }
+    
+    // Single summarizer pass!
+    console.log('[Sustainability Advisor] 🔄 Generating summary...');
+    const summarizeStart = performance.now();
+    const summary = await summarizer.summarize(focusedContent);
+    const summarizeDuration = ((performance.now() - summarizeStart) / 1000).toFixed(2);
+    
+    const totalDuration = ((performance.now() - startTime) / 1000).toFixed(2);
+    
     console.log('[Sustainability Advisor] ✅ Analysis complete!');
+    console.log(`[Sustainability Advisor] ⏱️ Timing: Summarization ${summarizeDuration}s | Total ${totalDuration}s`);
+    console.log('[Sustainability Advisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[Sustainability Advisor] 🌱 SUSTAINABILITY SUMMARY:');
     console.log('[Sustainability Advisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(summary);
     console.log('[Sustainability Advisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -383,17 +743,18 @@ async function extractWithSummarizer(textContent) {
     
     return {
       summary: summary,
-      fullText: textContent,
-      truncated: false,  // We processed everything with summary of summaries
-      originalLength: originalLength,
-      processedLength: originalLength,  // We processed all of it
-      chunksCount: chunks.length,
+      focusedContent: focusedContent,
+      sectionsUsed: sectionsUsed.length,
+      totalSectionsFound: sections.length,
+      processedChars: totalChars,
+      summarizationTime: summarizeDuration,
+      totalTime: totalDuration,
       extractedAt: Date.now()
     };
     
   } catch (error) {
     console.error('[Sustainability Advisor] ❌ Error:', error.message);
-    return { error: error.message, fullText: textContent };
+    return { error: error.message };
   }
 }
 
@@ -421,44 +782,46 @@ function initializeSustainabilityAdvisor() {
     }
     
     isRunning = true;
+    const overallStart = performance.now();
     
-    const productContainer = extractAmazonProductInfo();
+    // NEW APPROACH: Direct targeted extraction
+    console.log('[Sustainability Advisor] 🚀 Starting targeted extraction...');
+    const sections = extractRelevantSections();
     
-    if (!productContainer) {
-      console.warn('[Sustainability Advisor] ⚠️ Could not find product data');
+    if (!sections || sections.length === 0) {
+      console.warn('[Sustainability Advisor] ⚠️ No relevant sections found');
       isRunning = false;
       return;
     }
     
-    // Clean the HTML
-    const cleanedText = cleanProductHTML(productContainer);
+    const extractionTime = ((performance.now() - overallStart) / 1000).toFixed(2);
+    console.log(`[Sustainability Advisor] ⚡ Extraction completed in ${extractionTime}s`);
     
-    if (SUSTAINABILITY_DEBUG) {
-      console.log(`[Sustainability Advisor] 📊 Extracted ${cleanedText.length.toLocaleString()} characters`);
-      console.groupCollapsed('[Sustainability Advisor] 📄 Full cleaned text (click to expand)');
-      console.log(cleanedText);
-      console.groupEnd();
-    }
+    // Use Summarizer API to analyze the focused sections
+    const summarizerResult = await extractWithSummarizer(sections);
     
-    // Use Summarizer API to generate key points
-    const summarizerResult = await extractWithSummarizer(cleanedText);
+    const overallDuration = ((performance.now() - overallStart) / 1000).toFixed(2);
     
     // Log summarizer results - summary is already shown in extractWithSummarizer
     if (summarizerResult.error) {
       console.warn('[Sustainability Advisor] ⚠️ Could not generate summary:', summarizerResult.error);
+    } else {
+      console.log(`[Sustainability Advisor] 🎉 Complete! Total time: ${overallDuration}s (Extraction: ${extractionTime}s + Analysis: ${summarizerResult.summarizationTime}s)`);
     }
     
     // Store for later use - assign directly to global window object
     const dataToStore = {
       productId: detectionResult.productId,
       url: detectionResult.url,
-      cleanedText: cleanedText,
       summary: summarizerResult.summary || null,
       summaryError: summarizerResult.error || null,
-      truncated: summarizerResult.truncated || false,
-      chunksCount: summarizerResult.chunksCount || 1,
-      originalLength: summarizerResult.originalLength || cleanedText.length,
-      processedLength: summarizerResult.processedLength || cleanedText.length,
+      focusedContent: summarizerResult.focusedContent || null,
+      sectionsUsed: summarizerResult.sectionsUsed || 0,
+      totalSectionsFound: summarizerResult.totalSectionsFound || 0,
+      processedChars: summarizerResult.processedChars || 0,
+      extractionTime: extractionTime,
+      summarizationTime: summarizerResult.summarizationTime || null,
+      totalTime: overallDuration,
       extractedAt: Date.now()
     };
     
@@ -471,10 +834,8 @@ function initializeSustainabilityAdvisor() {
       self.__sustainabilityAdvisorData = dataToStore;
     }
     
-    if (SUSTAINABILITY_DEBUG) {
-      console.log('[Sustainability Advisor] 💾 Data stored');
-      console.log('[Sustainability Advisor] 💡 Access with: window.__sustainabilityAdvisorData');
-    }
+    console.log('[Sustainability Advisor] 💾 Data stored');
+    console.log('[Sustainability Advisor] 💡 Access with: window.__sustainabilityAdvisorData');
     
     // Mark as complete
     hasRun = true;
