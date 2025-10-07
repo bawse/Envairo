@@ -1,0 +1,332 @@
+{
+  "id": "amazon-global",
+  "name": "Amazon (Global)",
+  "version": "1.0.0",
+  "enabled": true,
+  "detection": {
+    "urlPatterns": [
+      {
+        "pattern": "https?:\\/\\/(?:www\\.|smile\\.)?amazon\\.(?:com|co\\.uk|de|fr|ca|in|it|es|com\\.au|co\\.jp)\\/(?:.*\\/)?(?:gp\\/product|dp)\\/([A-Z0-9]{10})",
+        "productIdGroup": 1
+      }
+    ],
+    "domSignals": [
+      "#productTitle",
+      "#feature-bullets"
+    ]
+  },
+  "extraction": {
+    "selectors": {
+      "alwaysInclude": [
+        {
+          "selector": "#productTitle",
+          "label": "Product Title",
+          "baseScore": 0.90,
+          "priority": "critical"
+        },
+        {
+          "selector": "#productFactsDesktop_feature_div",
+          "label": "Product Facts (Fabric, Care, Origin)",
+          "baseScore": 0.85,
+          "priority": "critical"
+        },
+        {
+          "selector": "#productFactsDesktopExpander",
+          "label": "Product Facts Expander",
+          "baseScore": 0.85,
+          "priority": "critical"
+        },
+        {
+          "selector": "#feature-bullets",
+          "label": "About This Item",
+          "baseScore": 0.75,
+          "priority": "critical"
+        },
+        {
+          "selector": "#productOverview_feature_div",
+          "label": "Product Overview Table",
+          "baseScore": 0.75,
+          "priority": "critical"
+        },
+        {
+          "selector": "#climatePledgeFriendly",
+          "label": "Climate Pledge Friendly",
+          "baseScore": 0.85,
+          "priority": "high"
+        },
+        {
+          "selector": "#certificateBadge_feature_div",
+          "label": "Certification Badges",
+          "baseScore": 0.80,
+          "priority": "high"
+        },
+        {
+          "selector": "#cr-badge-row",
+          "label": "Climate Pledge Badge Row",
+          "baseScore": 0.80,
+          "priority": "high"
+        },
+        {
+          "selector": "#badge-packaging",
+          "label": "Packaging Badges",
+          "baseScore": 0.80,
+          "priority": "high"
+        },
+        {
+          "selector": "#productDetails_techSpec_section_1",
+          "label": "Technical Specifications",
+          "baseScore": 0.70,
+          "priority": "medium"
+        },
+        {
+          "selector": "#productDetails_detailBullets_sections1",
+          "label": "Product Details Bullets",
+          "baseScore": 0.70,
+          "priority": "medium"
+        },
+        {
+          "selector": "#prodDetails",
+          "label": "Legacy Product Details",
+          "baseScore": 0.70,
+          "priority": "medium"
+        },
+        {
+          "selector": ".prodDetTable",
+          "label": "Product Details Table",
+          "baseScore": 0.70,
+          "priority": "medium"
+        },
+        {
+          "selector": "#productDescription",
+          "label": "Product Description",
+          "baseScore": 0.70,
+          "priority": "low"
+        },
+        {
+          "selector": "#aplus",
+          "label": "A+ Content",
+          "baseScore": 0.70,
+          "priority": "low"
+        },
+        {
+          "selector": "#aplus_feature_div",
+          "label": "A+ Content Container",
+          "baseScore": 0.70,
+          "priority": "low"
+        }
+      ],
+      "conditionalInclude": [
+        {
+          "selector": "#detailBullets_feature_div",
+          "label": "Detail Bullets (Mixed Content)",
+          "baseScore": 0.70,
+          "requiresKeywords": true
+        },
+        {
+          "selector": "#poExpander",
+          "label": "Mobile Product Overview",
+          "baseScore": 0.65,
+          "requiresKeywords": true
+        }
+      ]
+    },
+    "keywords": {
+      "materials": [
+        "material", "materials", "fabric", "composition", "shell", "lining", "upper", "outsole", "insole",
+        "leather", "cotton", "polyester", "nylon", "viscose", "elastane", "spandex", "wool", "silk",
+        "hemp", "linen", "down", "fill", "wood", "rubber", "eva", "tpu", "tpe", "pu", "bpa", "microfiber",
+        "plastic", "metal", "aluminum", "steel", "glass", "ceramic", "bamboo", "cork",
+        "rayon", "acrylic", "modal", "tencel", "lyocell", "acetate", "denim", "canvas", "fleece",
+        "mesh", "suede", "velvet", "satin", "chiffon", "jersey", "knit", "woven",
+        "crafted", "care instructions", "wash", "breathability", "moisture-wicking"
+      ],
+      "sustainability": [
+        "sustainab", "recycled", "recyclable", "biodegrad", "compostable", "organic",
+        "eco", "environment", "packaging", "responsibly", "ethically", "renewable",
+        "climate pledge", "carbon neutral", "carbon-neutral", "waterless",
+        "manufacturing practices", "responsibly sourced", "fair trade"
+      ],
+      "certifications": [
+        "fsc", "pefc", "oeko-tex", "gots", "bluesign", "b corp",
+        "grs", "certified", "certification", "nordic swan", "ecolabel",
+        "safer chemicals", "cradle to cradle", "fair trade certified"
+      ],
+      "ingredients": [
+        "ingredient", "inci", "allergen", "nutrition", "nutritional",
+        "additives", "preservatives", "paraben", "sulfate", "phthalate",
+        "fragrance", "safety information", "directions", "usage"
+      ]
+    },
+    "patterns": [
+      {
+        "pattern": "made (of|from|with)",
+        "category": "material",
+        "description": "Catches 'made of X', 'made from X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "composed of",
+        "category": "material",
+        "description": "Catches 'composed of X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "crafted from",
+        "category": "material",
+        "description": "Catches 'crafted from X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "material:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Catches 'Material: X' or 'Material X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "fabric:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Catches 'Fabric: X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "fabric type",
+        "category": "material",
+        "description": "Structured data indicator",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "care instructions",
+        "category": "material",
+        "description": "Often near materials section",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "\\d+%\\s+[\\w\\-]+",
+        "category": "material",
+        "description": "Catches '50% cotton', '100% recycled'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "ingredients?:",
+        "category": "ingredient",
+        "description": "Ingredient list indicator",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "contains?:",
+        "category": "ingredient",
+        "description": "Contains statement",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "certified (by|to)",
+        "category": "certification",
+        "description": "Certification indicator",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "certification",
+        "category": "certification",
+        "description": "Generic certification mention",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "upper:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Footwear material (upper)",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "outsole:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Footwear material (outsole)",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "insole:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Footwear material (insole)",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "lining:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Garment lining material",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "fill:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Fill material (down, etc.)",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "shell:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Shell material",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "construction:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Construction details",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "finish:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Finish details",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "viscose|bamboo|spandex|modal|tencel",
+        "category": "material",
+        "description": "Common sustainable materials",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "high-quality material",
+        "category": "material",
+        "description": "Material callout",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "product details",
+        "category": "material",
+        "description": "Section that often has materials",
+        "bonus": 0.05
+      }
+    ],
+    "scoring": {
+      "keywordFamilyBonus": 0.05,
+      "patternMatchBonus": 0.10,
+      "maxScore": 1.0
+    }
+  },
+  "analysis": {
+    "summarizer": {
+      "sharedContext": "Extract sustainability and environmental information from this product. Focus on: materials (including exact material names like TPU, plastic, metal, etc.), environmental certifications (GRS, Climate Pledge, etc.), recycled content percentage, packaging sustainability, manufacturing origin, worker welfare, and environmental impact. Include product features that indicate sustainability such as: durability (warranty length, shelf life, construction quality), reusability (reusable, refillable, rechargeable), energy efficiency, repairability (replaceable parts), and multi-functionality. Ignore only: pricing, shipping costs, color options, and purely aesthetic features.",
+      "type": "key-points",
+      "format": "plain-text",
+      "length": "long",
+      "inputQuotaUsage": 0.85
+    },
+    "structuredExtraction": {
+      "enabled": false,
+      "systemPrompt": "You extract structured sustainability data from product summaries into JSON format.",
+      "outputSchema": {
+        "materials": "array",
+        "certifications": "array",
+        "recycledContent": "string",
+        "packaging": "string",
+        "origin": "string"
+      }
+    }
+  },
+  "metadata": {
+    "author": "Chrome Built-in AI Extension",
+    "created": "2025-01-06T00:00:00Z",
+    "lastUpdated": "2025-01-06T00:00:00Z",
+    "notes": "Initial configuration based on Phase 2 implementation. Supports all major Amazon domains globally."
+  }
+}

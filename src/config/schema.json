@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Site Extraction Configuration Schema",
+  "description": "Schema for defining how to extract sustainability data from e-commerce sites",
+  "type": "object",
+  "required": ["id", "name", "version", "detection", "extraction", "analysis"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this site configuration",
+      "examples": ["amazon-global", "ebay-us", "walmart"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the site"
+    },
+    "version": {
+      "type": "string",
+      "description": "Configuration version (semver)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this configuration is active",
+      "default": true
+    },
+    "detection": {
+      "type": "object",
+      "description": "Rules for detecting product pages on this site",
+      "required": ["urlPatterns"],
+      "properties": {
+        "urlPatterns": {
+          "type": "array",
+          "description": "Regex patterns to match product page URLs",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "description": "Regex pattern as string"
+              },
+              "productIdGroup": {
+                "type": "integer",
+                "description": "Capture group index for product ID",
+                "default": 1
+              }
+            }
+          }
+        },
+        "domSignals": {
+          "type": "array",
+          "description": "Optional DOM-based signals (e.g., specific elements that indicate product page)",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "extraction": {
+      "type": "object",
+      "description": "Rules for extracting content from product pages",
+      "required": ["selectors", "keywords", "patterns"],
+      "properties": {
+        "selectors": {
+          "type": "object",
+          "description": "CSS selectors for extracting content",
+          "properties": {
+            "alwaysInclude": {
+              "type": "array",
+              "description": "Selectors that always contain relevant data (no filtering)",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "selector": {"type": "string"},
+                  "label": {"type": "string"},
+                  "baseScore": {"type": "number", "minimum": 0, "maximum": 1},
+                  "priority": {"type": "string", "enum": ["critical", "high", "medium", "low"]}
+                }
+              }
+            },
+            "conditionalInclude": {
+              "type": "array",
+              "description": "Selectors that require keyword/pattern matching",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "selector": {"type": "string"},
+                  "label": {"type": "string"},
+                  "baseScore": {"type": "number"},
+                  "requiresKeywords": {"type": "boolean", "default": true}
+                }
+              }
+            }
+          }
+        },
+        "keywords": {
+          "type": "object",
+          "description": "Keyword families for relevance detection",
+          "properties": {
+            "materials": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "sustainability": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "certifications": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "ingredients": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "patterns": {
+          "type": "array",
+          "description": "Regex patterns for detecting material/sustainability indicators",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pattern": {"type": "string"},
+              "category": {"type": "string"},
+              "description": {"type": "string"},
+              "bonus": {"type": "number", "description": "Score bonus when matched"}
+            }
+          }
+        },
+        "scoring": {
+          "type": "object",
+          "description": "Scoring rules for ranking sections",
+          "properties": {
+            "keywordFamilyBonus": {"type": "number", "default": 0.05},
+            "patternMatchBonus": {"type": "number", "default": 0.10},
+            "maxScore": {"type": "number", "default": 1.0}
+          }
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "description": "AI analysis configuration",
+      "properties": {
+        "summarizer": {
+          "type": "object",
+          "properties": {
+            "sharedContext": {"type": "string"},
+            "type": {"type": "string", "enum": ["key-points", "tl;dr", "teaser", "headline"]},
+            "format": {"type": "string", "enum": ["plain-text", "markdown"]},
+            "length": {"type": "string", "enum": ["short", "medium", "long"]},
+            "inputQuotaUsage": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.85}
+          }
+        },
+        "structuredExtraction": {
+          "type": "object",
+          "description": "Future: Prompt API configuration for structured data",
+          "properties": {
+            "enabled": {"type": "boolean", "default": false},
+            "systemPrompt": {"type": "string"},
+            "outputSchema": {"type": "object"}
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata about the configuration",
+      "properties": {
+        "author": {"type": "string"},
+        "created": {"type": "string", "format": "date-time"},
+        "lastUpdated": {"type": "string", "format": "date-time"},
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}

@@ -37,7 +37,11 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["src/overlay.css"],
+      "resources": [
+        "src/overlay.css",
+        "src/config/**/*.json",
+        "src/core/*.js"
+      ],
       "matches": ["<all_urls>"]
     }
   ]

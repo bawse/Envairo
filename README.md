@@ -1,30 +1,36 @@
-# Chrome Built-in AI Test Extension
+# Chrome Built-in AI - Sustainability Advisor
 
-A modern, glass-morphism styled Chrome extension to test the Chrome Built-in AI Prompt API for the Google Chrome Built-in AI Challenge 2025.
+A modern Chrome extension demonstrating Chrome's Built-in AI APIs (Prompt API & Summarizer API) through a **Sustainability Shopping Advisor** for the Google Chrome Built-in AI Challenge 2025.
 
-## 🌱 Sustainability Shopping Advisor (In Development)
+## 🌱 Sustainability Shopping Advisor
 
-This extension is being enhanced with a **Sustainability Shopping Advisor** feature that provides real-time sustainability scoring for products on e-commerce websites.
+**Current Status**: Phase 2 Complete ✅
 
-**Current Status**: Phase 1 - Amazon Product Detection & HTML Extraction ✅
+The extension automatically analyzes Amazon products for:
+- 📦 Material composition (fabrics, plastics, metals, etc.)
+- 🌿 Environmental certifications (Climate Pledge, GRS, Nordic Swan, etc.)
+- ♻️ Recycled content percentages
+- 🏭 Manufacturing practices
+- 📋 Care instructions and origin
 
-See [TESTING.md](TESTING.md) for detailed testing instructions.
+**See [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) for complete documentation.**
 
 ## 📁 Project Structure
 
 ```
 chrome-built-in/
-├── manifest.json          # Extension configuration
-├── src/                   # Source code
-│   ├── bg.js             # Background service worker
-│   ├── overlay.js        # Content script
-│   ├── overlay.css       # Overlay styles
-│   ├── popup.html        # Extension popup UI
-│   ├── popup.js          # Popup logic
-│   └── icons/            # Extension icons
-├── docs/                  # Documentation
-├── ideas/                 # Future project ideas
-└── README.md              # This file
+├── manifest.json                # Extension configuration
+├── PROJECT_DOCUMENTATION.md     # Complete technical documentation
+├── src/                         # Source code
+│   ├── bg.js                   # Background service worker
+│   ├── overlay.js              # Content script (main logic)
+│   ├── overlay.css             # Overlay styles
+│   ├── popup.html              # Extension popup UI
+│   ├── popup.js                # Popup logic
+│   └── icons/                  # Extension icons
+├── docs/                        # Design documentation
+├── ideas/                       # Future project ideas
+└── README.md                    # This file
 ```
 
 ## 🎨 Design Features
@@ -77,12 +83,21 @@ Based on the iOS glass mode aesthetic:
 5. Select the folder containing this extension
 6. Click the extension icon in the toolbar
 
-## Usage
+## Quick Start
 
-1. Click the extension icon
+### Test the Sustainability Advisor
+
+1. Visit any Amazon product page (e.g., clothing, phone cases, electronics)
+2. Open DevTools Console (F12)
+3. See sustainability analysis automatically generated
+4. Check `window.__sustainabilityAdvisorData` for extracted info
+
+### Test the AI Glass Interface
+
+1. Click the extension icon in toolbar
 2. Wait for "✅ AI is ready!" status
-3. Type a prompt (e.g., "Write a haiku about coding")
-4. Click "Send Prompt"
+3. Type a prompt (e.g., "Write a haiku about sustainability")
+4. Click "Stream Response" or "Get Response"
 5. Watch the AI generate a response!
 
 ## Troubleshooting
@@ -91,11 +106,12 @@ Based on the iOS glass mode aesthetic:
 - **"AI model is downloading"**: Wait for download to complete at `chrome://components`
 - **Error messages**: Check the console (F12) for detailed error information
 
-## Resources
+## Documentation & Resources
 
+- **[PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md)** - Complete technical documentation
 - [Prompt API Documentation](https://developer.chrome.com/docs/ai/prompt-api)
+- [Summarizer API Documentation](https://developer.chrome.com/docs/ai/summarizer-api)
 - [Chrome AI Challenge](https://googlechromeai2025.devpost.com/)
-- [Early Preview Program Docs](docs.md)
 
 ## License
 
