@@ -1,8 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Chrome AI Test Extension",
+  "name": "Envairo",
   "version": "1.0.0",
   "description": "Testing Chrome Built-in AI Prompt API",
+  "trial_tokens": [
+    "Aq+SgkC5xaesUIiSEwEbk4uG2xGcrj2fbfAXRjA22ASx3Dl3dSdiFstkqE7S/oADC+aZvMIZIRhZCW1YcoN/5gIAAAB7eyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vaGlsam9rYXBubGpwbGtwaG5mb2tvZWdiamhham5rYmMiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElNdWx0aW1vZGFsSW5wdXQiLCJleHBpcnkiOjE3NzQzMTA0MDB9"
+  ],
   "permissions": [
     "activeTab",
     "scripting",
@@ -40,10 +43,13 @@
       "resources": [
         "src/overlay.css",
         "src/config/**/*.json",
-        "src/core/*.js"
+        "src/core/*.js",
+        "src/utils/*.js",
+        "src/data/*.csv"
       ],
       "matches": ["<all_urls>"]
     }
   ]
 }
+
 

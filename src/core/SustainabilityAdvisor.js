@@ -89,14 +89,16 @@ export class SustainabilityAdvisor {
       const extractionTime = ((performance.now() - startTime) / 1000).toFixed(2);
       console.log(`[SustainabilityAdvisor] ⚡ Extraction completed in ${extractionTime}s`);
 
-      // Select sections for AI analysis
+      // Prepare for AI analysis
       const analyzer = new AIAnalyzer(detection.config);
-      const summarizerConfig = detection.config.analysis.summarizer;
-      
-      // Calculate target size based on config (default 85% of quota)
-      const inputQuotaUsage = summarizerConfig.inputQuotaUsage || 0.85;
-      // Estimate: Summarizer typically has ~5,500 char quota
-      const targetChars = Math.floor(5500 * inputQuotaUsage);
+
+      // Initialize analyzer (loads scoring matrix)
+      await analyzer.initialize();
+
+      // Select sections for AI analysis
+      // Note: Prompt API typically has larger context than Summarizer
+      // Estimate ~8K-16K tokens = ~6K-12K characters
+      const targetChars = 6000; // Conservative estimate
 
       const selection = extractor.selectSectionsForAnalysis(sections, targetChars);
       
@@ -105,9 +107,9 @@ export class SustainabilityAdvisor {
       // Log selected sections
       this.logSelectedSections(selection.selected);
 
-      // Analyze with AI
-      console.log('[SustainabilityAdvisor] 🤖 Starting AI analysis...');
-      const analysisResult = await analyzer.analyzeSustainability(selection.focusedContent);
+      // Analyze with AI (pass sections array, not focusedContent string)
+      console.log('[SustainabilityAdvisor] 🤖 Starting AI analysis with scoring...');
+      const analysisResult = await analyzer.analyzeSustainability(selection.selected);
 
       if (!analysisResult.success) {
         console.warn('[SustainabilityAdvisor] ⚠️ Analysis failed:', analysisResult.error);
@@ -116,9 +118,27 @@ export class SustainabilityAdvisor {
 
       // Log results
       console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('[SustainabilityAdvisor] 🌱 SUSTAINABILITY SUMMARY:');
+      console.log(`[SustainabilityAdvisor] 🌱 SUSTAINABILITY SCORE: ${analysisResult.score.overall}/100 (${analysisResult.score.tier})`);
       console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(analysisResult.summary);
+      console.log('[SustainabilityAdvisor] 📊 BREAKDOWN:');
+      console.log(`[SustainabilityAdvisor]    Material Score: ${analysisResult.score.breakdown.base_material_score}`);
+      console.log(`[SustainabilityAdvisor]    Certifications: +${analysisResult.score.breakdown.certification_bonus}`);
+      console.log(`[SustainabilityAdvisor]    Durability: +${analysisResult.score.breakdown.durability_bonus}`);
+      console.log(`[SustainabilityAdvisor]    Packaging: +${analysisResult.score.breakdown.packaging_bonus}`);
+      console.log(`[SustainabilityAdvisor]    Circularity: ${analysisResult.score.breakdown.circularity_penalty}`);
+      console.log('[SustainabilityAdvisor]');
+      console.log('[SustainabilityAdvisor] ✅ STRENGTHS:');
+      analysisResult.score.strengths.forEach(s => 
+        console.log(`[SustainabilityAdvisor]    • ${s}`)
+      );
+      console.log('[SustainabilityAdvisor]');
+      console.log('[SustainabilityAdvisor] ⚠️ CONCERNS:');
+      analysisResult.score.concerns.forEach(c => 
+        console.log(`[SustainabilityAdvisor]    • ${c}`)
+      );
+      console.log('[SustainabilityAdvisor]');
+      console.log('[SustainabilityAdvisor] 💡 RECOMMENDATION:');
+      console.log(`[SustainabilityAdvisor]    ${analysisResult.score.recommendation}`);
       console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
@@ -177,8 +197,9 @@ export class SustainabilityAdvisor {
       productId: detection.productId,
       url: detection.url,
       
-      // Summary
-      summary: analysisResult.summary,
+      // AI analysis results
+      extracted: analysisResult.extracted,
+      score: analysisResult.score,
       
       // Metadata
       sectionsFound: sections.length,
@@ -193,7 +214,6 @@ export class SustainabilityAdvisor {
       totalTime: totalTime,
       
       // Raw data (for debugging/advanced use)
-      focusedContent: selection.focusedContent,
       selectedSections: selection.selected,
       
       timestamp: Date.now()
