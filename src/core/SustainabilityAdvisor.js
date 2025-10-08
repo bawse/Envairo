@@ -128,17 +128,25 @@ export class SustainabilityAdvisor {
       console.log(`[SustainabilityAdvisor]    Circularity: ${analysisResult.score.breakdown.circularity_penalty}`);
       console.log('[SustainabilityAdvisor]');
       console.log('[SustainabilityAdvisor] ✅ STRENGTHS:');
-      analysisResult.score.strengths.forEach(s => 
-        console.log(`[SustainabilityAdvisor]    • ${s}`)
-      );
+      if (analysisResult.score.strengths && Array.isArray(analysisResult.score.strengths)) {
+        analysisResult.score.strengths.forEach(s => 
+          console.log(`[SustainabilityAdvisor]    • ${s}`)
+        );
+      } else {
+        console.log('[SustainabilityAdvisor]    (none provided)');
+      }
       console.log('[SustainabilityAdvisor]');
       console.log('[SustainabilityAdvisor] ⚠️ CONCERNS:');
-      analysisResult.score.concerns.forEach(c => 
-        console.log(`[SustainabilityAdvisor]    • ${c}`)
-      );
+      if (analysisResult.score.concerns && Array.isArray(analysisResult.score.concerns)) {
+        analysisResult.score.concerns.forEach(c => 
+          console.log(`[SustainabilityAdvisor]    • ${c}`)
+        );
+      } else {
+        console.log('[SustainabilityAdvisor]    (none provided)');
+      }
       console.log('[SustainabilityAdvisor]');
       console.log('[SustainabilityAdvisor] 💡 RECOMMENDATION:');
-      console.log(`[SustainabilityAdvisor]    ${analysisResult.score.recommendation}`);
+      console.log(`[SustainabilityAdvisor]    ${analysisResult.score.recommendation || 'No recommendation provided'}`);
       console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);

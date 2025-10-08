@@ -1,0 +1,202 @@
+material,domain_category,unit,ghg_kgco2e_per_kg,recyclable,notes,score_0_100
+Cotton (conventional),clothing,kg,3.0,limited,High water; pesticide use varies,95.9
+Cotton (organic),clothing,kg,1.8,limited,Lower agrochemical inputs; often rainfed,97.6
+"Polyester (PET, virgin)",clothing,kg,2.8,yes,Microfiber shedding risk,96.1
+"Polyester (rPET, recycled)",clothing,kg,1.1,yes,Lower GHG than virgin,98.6
+Nylon 6,clothing,kg,5.4,yes,Higher GHG vs PET,92.4
+"Nylon 6,6",clothing,kg,6.6,yes,Adipic acid N2O driver,90.7
+Wool (greasy fiber),clothing,kg,27.0,yes,Enteric methane; durable use-phase,61.5
+Viscose (rayon),clothing,kg,3.0,limited,Dissolving pulp; chemical processing,95.9
+Lyocell (Tencel),clothing,kg,2.0,limited,Closed-loop solvent system,97.3
+Modal,clothing,kg,2.5,limited,MMCF variant,96.6
+Acrylic (PAN),clothing,kg,6.0,limited,High energy precursor,91.6
+Elastane (Spandex),clothing,kg,9.0,limited,"Small % of garment, high GHG",87.3
+Linen (flax),clothing,kg,1.8,limited,Lower inputs; retting impacts vary,97.6
+Hemp fiber,clothing,kg,1.6,limited,Low inputs; bast fiber,97.9
+Silk,clothing,kg,10.0,limited,Energy for rearing/processing,85.8
+Leather (bovine),clothing,kg,17.0,limited,Allocation w/ beef; tanning chemistry,75.8
+Bamboo viscose,clothing,kg,3.2,limited,Chemically processed cellulose,95.6
+Cupro,clothing,kg,3.0,limited,Copper-ammonia process,95.9
+Acetate,clothing,kg,3.5,limited,Cellulose acetate,95.1
+Triacetate,clothing,kg,4.0,limited,Similar to acetate,94.4
+Merino wool,clothing,kg,27.0,yes,Similar to wool generic,61.5
+Cashmere,clothing,kg,45.0,limited,High methane; low yield per animal,35.8
+Alpaca,clothing,kg,20.0,limited,Camelid fiber; regional variance,71.5
+Natural rubber (NR),clothing,kg,2.7,yes,Plantation impacts vary,96.3
+PU synthetic leather,clothing,kg,6.0,limited,Polyurethane-coated textile,91.6
+PVC synthetic leather,clothing,kg,7.0,limited,Chlorinated polymer concerns,90.1
+Ramie,clothing,kg,2.0,limited,Bast fiber,97.3
+Jute,clothing,kg,1.6,limited,Bast fiber,97.9
+Kenaf,clothing,kg,1.6,limited,Bast fiber,97.9
+Abaca,clothing,kg,1.8,limited,Leaf fiber,97.6
+Pineapple leaf fiber,clothing,kg,1.8,limited,Byproduct fiber,97.6
+PET (bottle grade),general materials,kg,2.8,yes,PlasticsEurope eco-profiles,96.1
+HDPE,general materials,kg,1.9,yes,Common packaging,97.4
+LDPE,general materials,kg,1.9,yes,Film applications,97.4
+LLDPE,general materials,kg,2.0,yes,Film,97.3
+PP,general materials,kg,1.8,yes,Rigid/flexible packaging,97.6
+PS (general purpose),general materials,kg,3.3,yes,Styrenics,95.4
+HIPS,general materials,kg,3.4,yes,Impact-modified PS,95.3
+EPS (expanded PS),general materials,kg,3.0,yes,Foam; blowing agents vary,95.9
+ABS,general materials,kg,2.7,yes,Widely used in enclosures,96.3
+PVC,general materials,kg,2.7,yes,Chlorinated polymer; additives,96.3
+PC (polycarbonate),general materials,kg,5.2,yes,High-performance,92.7
+PMMA (acrylic),general materials,kg,3.6,yes,Transparent polymer,95.0
+PA6 (nylon 6),general materials,kg,5.4,yes,Engineering plastic,92.4
+"PA66 (nylon 6,6)",general materials,kg,6.6,yes,Engineering plastic,90.7
+PBT,general materials,kg,3.2,yes,Engineering polyester,95.6
+PETG,general materials,kg,3.0,yes,PET variant,95.9
+SAN,general materials,kg,2.6,yes,Styrene-acrylonitrile,96.4
+EVA,general materials,kg,2.2,yes,Foams/films,97.0
+TPU,general materials,kg,4.1,yes,Elastomeric polymer,94.3
+PLA (bioplastic),general materials,kg,1.6,yes,Industrial composting,97.9
+POM (acetal),general materials,kg,3.1,yes,Precision parts,95.7
+PPO,general materials,kg,5.0,yes,"Blends (e.g., Noryl)",93.0
+PPS,general materials,kg,7.0,yes,High-temp polymer,90.1
+PEEK,general materials,kg,9.5,yes,High-performance polymer,86.6
+PTFE,general materials,kg,12.0,limited,High energy manufacturing,83.0
+Epoxy resin,general materials,kg,6.0,no,Thermoset,91.6
+Phenolic resin,general materials,kg,4.0,no,Thermoset,94.4
+Urea-formaldehyde resin,general materials,kg,2.0,no,Thermoset,97.3
+Melamine-formaldehyde resin,general materials,kg,3.0,no,Thermoset,95.9
+Carbon fiber (PAN-based),general materials,kg,29.0,limited,High temp processing,58.7
+Glass fiber (E-glass),general materials,kg,1.7,limited,Energy for melting,97.7
+Aramid fiber (Kevlar),general materials,kg,15.0,limited,Aromatic polyamide,78.7
+SBR rubber,general materials,kg,2.5,yes,Synthetic rubber,96.6
+Butyl rubber (IIR),general materials,kg,3.0,yes,"Inner tubes, liners",95.9
+Silicone rubber (VMQ),general materials,kg,5.0,limited,Siloxane polymer,93.0
+NBR rubber,general materials,kg,3.2,yes,Oil-resistant,95.6
+EPDM rubber,general materials,kg,2.8,yes,Weather-resistant,96.1
+Steel (carbon),general materials,kg,2.0,yes,Primary steel,97.3
+Stainless steel (304),general materials,kg,6.1,yes,Alloyed Cr/Ni,91.4
+Aluminum (primary),general materials,kg,16.0,yes,Electrolysis heavy electricity,77.3
+Aluminum (recycled),general materials,kg,0.9,yes,Secondary aluminum,98.9
+Copper,general materials,kg,4.0,yes,Smelting/refining energy,94.4
+Brass,general materials,kg,3.4,yes,Cu-Zn alloy,95.3
+Zinc,general materials,kg,3.0,yes,Electrowinning,95.9
+Tin,general materials,kg,3.8,yes,Smelting,94.7
+Nickel,general materials,kg,9.0,yes,Energy intensive; often higher,87.3
+Lead,general materials,kg,1.5,yes,Recycling common,98.0
+Magnesium,general materials,kg,25.0,yes,Primary Pidgeon process high GHG,64.4
+Titanium,general materials,kg,35.0,yes,Kroll process energy intense,50.1
+Gold,general materials,kg,12000.0,yes,Per kg extremely high; mass in products tiny,0.0
+Silver,general materials,kg,150.0,yes,Precious metal; refining energy,0.0
+Platinum,general materials,kg,1000.0,yes,PGM mining/refining,0.0
+Glass (soda-lime),general materials,kg,1.0,yes,Container glass,98.7
+Glass (borosilicate),general materials,kg,1.8,yes,Lab glass,97.6
+Paper (uncoated),packaging,kg,1.0,yes,Virgin/recycled mix dependent,98.7
+Paper (coated),packaging,kg,1.3,yes,Coatings add impacts,98.3
+Cardboard (corrugated),packaging,kg,0.8,yes,High recycling rates,99.0
+MDF,home goods,kg,1.0,limited,Resin-bound wood fiber,98.7
+Plywood,home goods,kg,0.8,limited,Adhesive content,99.0
+Solid wood (pine),home goods,kg,0.5,yes,Carbon storage not credited here,99.4
+Solid wood (oak),home goods,kg,0.7,yes,Hardwood processing,99.1
+Bamboo,home goods,kg,0.5,limited,Engineered products vary,99.4
+Ceramic (stoneware),home goods,kg,1.2,no,Firing energy,98.4
+Porcelain,home goods,kg,1.5,no,High firing temperature,98.0
+Concrete,home goods,kg,0.15,limited,Aggregates dilute cement impact,99.9
+Cement (Portland),home goods,kg,0.9,limited,Clinker CO2 process emissions,98.9
+Gypsum board,home goods,kg,0.3,limited,Calcination + paper liner,99.7
+Lime (CaO),home goods,kg,1.0,limited,Calcination CO2,98.7
+FR-4 (epoxy glass laminate),electronics,kg,8.0,no,Epoxy + glass; PCB substrate,88.7
+Copper-clad laminate (CCL),electronics,kg,10.0,no,PCB intermediate,85.8
+Solder (SAC305),electronics,kg,3.6,yes,Sn-Ag-Cu alloy,95.0
+Solder (SnPb 63/37),electronics,kg,3.2,yes,Lead-based solder,95.6
+Silicon wafer (200mm),electronics,kg,160.0,limited,Per kg wafer; per die much less,0.0
+Silicon wafer (300mm),electronics,kg,130.0,limited,Scaling benefits,0.0
+Lithium carbonate (Li2CO3),electronics,kg,5.0,limited,Battery precursor,93.0
+Lithium hydroxide (LiOH),electronics,kg,6.0,limited,Battery precursor,91.6
+Cathode (NMC111),electronics,kg,12.0,limited,Battery CAM,83.0
+Cathode (NMC811),electronics,kg,9.0,limited,Higher Ni fraction,87.3
+Cathode (LFP),electronics,kg,5.0,limited,Lower Co/Ni content,93.0
+Graphite anode,electronics,kg,3.0,limited,Natural/synthetic vary,95.9
+PVDF binder,electronics,kg,6.0,limited,Fluoropolymer,91.6
+Copper foil (battery),electronics,kg,4.0,yes,Battery-grade copper foil,94.4
+Aluminum foil (battery),electronics,kg,10.0,yes,Rolled to thin gauges,85.8
+Electrolyte (LiPF6 carbonate),electronics,kg,12.0,limited,Solvents + salt,83.0
+Display glass (ALC),electronics,kg,2.5,yes,Aluminosilicate glass,96.6
+LED package (InGaN on sapphire),electronics,kg,500.0,limited,Per kg device-class material,0.0
+Neodymium magnet (NdFeB),electronics,kg,70.0,limited,Rare earth mining/refining,0.0
+Ferrite magnet,electronics,kg,2.0,limited,Iron oxides + sintering,97.3
+Aluminum bond wire,electronics,kg,16.0,yes,Derived from aluminum,77.3
+Gold bond wire,electronics,kg,12000.0,yes,Derived from gold,0.0
+Ceramic substrate (alumina),electronics,kg,2.5,no,Technical ceramic,96.6
+Sapphire substrate,electronics,kg,100.0,no,Crystal growth energy,0.0
+Gallium nitride (GaN) epiwafer,electronics,kg,400.0,limited,Device-grade material,0.0
+Silicon carbide (SiC) wafer,electronics,kg,300.0,limited,High-temp growth,0.0
+R134a (HFC-134a),appliances,kg,1430.0,yes,Use 100-yr GWP as kgCO2e/kg proxy for leakage scoring,0.0
+R600a (isobutane),appliances,kg,3.3,yes,GWP ~3,95.4
+R290 (propane),appliances,kg,3.3,yes,GWP ~3,95.4
+Cyclopentane (blowing agent),appliances,kg,7.0,no,Foam agent,90.1
+PU rigid foam,appliances,kg,6.0,no,Insulation foam,91.6
+Compressor oil (POE),appliances,kg,3.0,yes,Small quantities,95.9
+Glass (container),packaging,kg,1.0,yes,High mass offsets recyclability,98.7
+Aluminum can body,packaging,kg,10.0,yes,Can sheet incl. rolling; varies widely,85.8
+Steel can body,packaging,kg,2.2,yes,Tinplate steel,97.0
+Carton (aseptic beverage),packaging,kg,1.2,limited,Composite recycling limited,98.4
+PET bottle,packaging,kg,2.8,yes,Bottle-grade PET,96.1
+HDPE bottle,packaging,kg,1.9,yes,Blow-mold grade,97.4
+PP rigid container,packaging,kg,1.8,yes,Injection PP,97.6
+Flexible film (LDPE),packaging,kg,1.9,yes,Film-grade LDPE,97.4
+Flexible film (PP),packaging,kg,1.8,yes,BOPP/CPP,97.6
+Paper bag (kraft),packaging,kg,0.9,yes,High recycling rates,98.9
+Beef (beef herd),food,kg,60.0,n/a,OWID typical values (screening),14.3
+Beef (dairy herd),food,kg,27.0,n/a,OWID typical values (screening),61.5
+Lamb & mutton,food,kg,24.0,n/a,OWID typical values (screening),65.8
+Cheese,food,kg,21.0,n/a,OWID typical values (screening),70.1
+Dark chocolate,food,kg,19.0,n/a,OWID typical values (screening),73.0
+Coffee,food,kg,17.0,n/a,OWID typical values (screening),75.8
+Prawns (farmed),food,kg,12.0,n/a,OWID typical values (screening),83.0
+Fish (farmed),food,kg,6.0,n/a,OWID typical values (screening),91.6
+Pig meat,food,kg,7.0,n/a,OWID typical values (screening),90.1
+Poultry meat,food,kg,6.0,n/a,OWID typical values (screening),91.6
+Eggs,food,kg,4.5,n/a,OWID typical values (screening),93.7
+Milk (dairy),food,kg,3.0,n/a,OWID typical values (screening),95.9
+Fish (wild caught),food,kg,3.0,n/a,OWID typical values (screening),95.9
+Tofu (soy),food,kg,3.0,n/a,OWID typical values (screening),95.9
+Peas,food,kg,1.0,n/a,OWID typical values (screening),98.7
+Beans,food,kg,2.0,n/a,OWID typical values (screening),97.3
+Lentils,food,kg,1.0,n/a,OWID typical values (screening),98.7
+Groundnuts (peanuts),food,kg,3.0,n/a,OWID typical values (screening),95.9
+Tree nuts,food,kg,0.7,n/a,OWID typical values (screening),99.1
+Wheat & rye,food,kg,1.4,n/a,OWID typical values (screening),98.1
+Maize (corn),food,kg,1.0,n/a,OWID typical values (screening),98.7
+Barley,food,kg,1.2,n/a,OWID typical values (screening),98.4
+Oatmeal,food,kg,2.5,n/a,OWID typical values (screening),96.6
+Rice,food,kg,4.0,n/a,OWID typical values (screening),94.4
+Potatoes,food,kg,0.5,n/a,OWID typical values (screening),99.4
+Cassava,food,kg,0.4,n/a,OWID typical values (screening),99.6
+Tomatoes,food,kg,1.4,n/a,OWID typical values (screening),98.1
+Onions & leeks,food,kg,0.5,n/a,OWID typical values (screening),99.4
+Brassicas,food,kg,0.5,n/a,OWID typical values (screening),99.4
+Other vegetables,food,kg,1.6,n/a,OWID typical values (screening),97.9
+Apples,food,kg,0.5,n/a,OWID typical values (screening),99.4
+Bananas,food,kg,0.9,n/a,OWID typical values (screening),98.9
+Berries & grapes,food,kg,1.4,n/a,OWID typical values (screening),98.1
+Citrus fruit,food,kg,0.5,n/a,OWID typical values (screening),99.4
+Olive oil,food,kg,6.0,n/a,OWID typical values (screening),91.6
+Palm oil,food,kg,8.0,n/a,OWID typical values (screening),88.7
+Rapeseed (canola) oil,food,kg,3.3,n/a,OWID typical values (screening),95.4
+Sunflower oil,food,kg,3.3,n/a,OWID typical values (screening),95.4
+Soybean oil,food,kg,3.3,n/a,OWID typical values (screening),95.4
+Sugar (cane),food,kg,3.0,n/a,OWID typical values (screening),95.9
+Sugar (beet),food,kg,1.8,n/a,OWID typical values (screening),97.6
+Bread,food,kg,1.4,n/a,OWID typical values (screening),98.1
+Pasta,food,kg,1.6,n/a,OWID typical values (screening),97.9
+Chocolate bar,food,kg,5.0,n/a,OWID typical values (screening),93.0
+Chips (crisps),food,kg,2.7,n/a,OWID typical values (screening),96.3
+Beer,food,kg,0.8,n/a,OWID typical values (screening),99.0
+Wine,food,kg,1.6,n/a,OWID typical values (screening),97.9
+Soft drinks,food,kg,0.4,n/a,OWID typical values (screening),99.6
+Butter,food,kg,12.0,n/a,OWID typical values (screening),83.0
+Yogurt,food,kg,2.2,n/a,OWID typical values (screening),97.0
+Margarine,food,kg,3.5,n/a,OWID typical values (screening),95.1
+Almond milk,food,kg,0.7,n/a,OWID typical values (screening),99.1
+Soy milk,food,kg,0.9,n/a,OWID typical values (screening),98.9
+Oat milk,food,kg,0.9,n/a,OWID typical values (screening),98.9
+Epoxy molding compound,electronics,kg,6.0,no,Semiconductor packaging,91.6
+Silver paste,electronics,kg,150.0,yes,Precious metal content,0.0
+Latex foam (natural),home goods,kg,2.5,limited,Natural rubber foam,96.6
+Memory foam (viscoelastic PU),home goods,kg,6.5,no,PU foam variant,90.8
+BoPET (Mylar) film,packaging,kg,3.0,yes,PET film,95.9
+BOPP film,packaging,kg,1.8,yes,PP film,97.6

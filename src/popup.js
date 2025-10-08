@@ -108,15 +108,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('topKValue').textContent = e.target.value;
   });
   
-  // Test Overlay button
+  // Toggle Overlay button
   document.getElementById('testOverlayBtn').addEventListener('click', async () => {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       await chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_GLASS' });
-      showMessage('Overlay toggled! Press Cmd/Ctrl+Shift+Y to toggle again.', 'success');
+      showMessage('Sustainability Advisor toggled! Press Cmd/Ctrl+Shift+Y to toggle again.', 'success');
     } catch (error) {
       console.error('Error toggling overlay:', error);
-      showMessage('Could not toggle overlay. Make sure you\'re on a valid web page.', 'error');
+      showMessage('Could not toggle overlay. Make sure you\'re on a product page.', 'error');
     }
   });
   

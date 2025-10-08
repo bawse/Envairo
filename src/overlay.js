@@ -16,7 +16,7 @@ console.log('[AI Glass Overlay] Content script loaded (configuration-driven arch
 // ============================================================================
 
 /**
- * Initialize and run sustainability analysis
+ * Initialize and run sustainability analysis with UI integration
  * Uses dynamic import for Chrome extension compatibility
  */
 async function initializeSustainabilityAdvisor() {
@@ -39,11 +39,42 @@ async function initializeSustainabilityAdvisor() {
       // Initialize config system
       await sustainabilityAdvisor.initialize();
       
+      // First, detect if this is a product page
+      const detection = sustainabilityAdvisor.detectProductPage();
+      
+      if (!detection) {
+        // Not a product page - don't show overlay automatically
+        console.log('[Overlay] Not a product page, overlay will remain hidden');
+        // Store state for manual toggle
+        window._isProductPage = false;
+        hasStarted = false; // Allow retry if page changes
+        return;
+      }
+      
+      // Is a product page
+      window._isProductPage = true;
+      
+      // Show loading overlay
+      showSustainabilityOverlay('loading', 'extracting');
+      
+      // Update loading state
+      showSustainabilityOverlay('loading', 'analyzing');
+      
       // Analyze current page (automatically detects site and extracts)
-      await sustainabilityAdvisor.analyzeCurrentPage();
+      const result = await sustainabilityAdvisor.analyzeCurrentPage();
+      
+      // Display results if successful
+      if (result && result.success) {
+        console.log('[Overlay] Analysis complete, displaying results...');
+        showSustainabilityOverlay('results', result);
+      } else if (result && result.error) {
+        console.warn('[Overlay] Analysis failed:', result.error);
+        showSustainabilityOverlay('error', result.error);
+      }
     
   } catch (error) {
       console.error('[SustainabilityAdvisor] Failed:', error);
+      showSustainabilityOverlay('error', error.message);
       hasStarted = false; // Reset on error to allow retry
     }
   };
@@ -68,201 +99,115 @@ async function initializeSustainabilityAdvisor() {
   }, 300);
 }
 
-// Run advisor
-initializeSustainabilityAdvisor();
-
-// ============================================================================
-// END SUSTAINABILITY ADVISOR
-// ============================================================================
-
-// ============================================================================
-// AI GLASS OVERLAY: Interactive AI Interface
-// ============================================================================
-
-let host = document.getElementById('ai-glass-host');
-if (!host){
-  console.log('[AI Glass Overlay] Initializing overlay...');
-  host = document.createElement('div');
-  host.id = 'ai-glass-host';
-  host.style.all = 'initial';
-  document.documentElement.appendChild(host);
-  const shadow = host.attachShadow({mode:'open'});
-
-  const container = document.createElement('div');
-  container.className = 'ai-glass-container';
-  container.innerHTML = `
-    <div class="ai-glass-panel">
-      <div class="ai-drag-handle" title="Drag to move">
-        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="7" cy="5" r="1.5" fill="currentColor"/>
-          <circle cx="13" cy="5" r="1.5" fill="currentColor"/>
-          <circle cx="7" cy="10" r="1.5" fill="currentColor"/>
-          <circle cx="13" cy="10" r="1.5" fill="currentColor"/>
-          <circle cx="7" cy="15" r="1.5" fill="currentColor"/>
-          <circle cx="13" cy="15" r="1.5" fill="currentColor"/>
-        </svg>
-      </div>
-      <h1 class="ai-title">✨ Chrome AI Assistant</h1>
-      <div class="ai-pill" id="ai-pill">Checking AI availability...</div>
-      <textarea class="ai-input" id="ai-input" placeholder="Ask me anything... Try 'Write a haiku about AI'"></textarea>
-      <div class="ai-actions">
-        <button class="ai-btn" id="ai-stream" disabled>Stream Response</button>
-        <button class="ai-btn" id="ai-get" disabled>Get Response</button>
-      </div>
-      <div class="ai-output" id="ai-output"></div>
-    </div>`;
-
-  // Load CSS
-  const link = document.createElement('link');
-  link.rel = 'stylesheet'; 
-  link.href = chrome.runtime.getURL('src/overlay.css');
-  shadow.appendChild(link);
-  shadow.appendChild(container);
-
-  // Get elements
-  const panel = container.querySelector('.ai-glass-panel');
-  const dragHandle = container.querySelector('.ai-drag-handle');
-  const pill = container.querySelector('#ai-pill');
-  const input = container.querySelector('#ai-input');
-  const streamBtn = container.querySelector('#ai-stream');
-  const getBtn = container.querySelector('#ai-get');
-  const output = container.querySelector('#ai-output');
-
-  // AI Session
-  let session = null;
-  let settings = null;
-
-  // Load settings from storage
-  async function loadSettings() {
-    try {
-      const result = await chrome.storage.sync.get('settings');
-      settings = result.settings || {
-        systemPrompt: 'You are a helpful AI assistant integrated into the browser. Provide concise, accurate, and friendly responses.',
-        temperature: 0.7,
-        topK: 40,
-        saveHistory: true,
-        overlayPosition: 'top-right'
-      };
-      console.log('Loaded settings:', settings);
-    } catch (error) {
-      console.error('Error loading settings:', error);
-    }
-  }
-
-  // Apply overlay position from settings
-  function applyPosition() {
-    container.style.transform = '';
-    container.style.top = '';
-    container.style.left = '';
-    container.style.right = '';
-    container.style.bottom = '';
+/**
+ * Show/update sustainability overlay
+ * @param {string} state - 'loading', 'results', or 'error'
+ * @param {*} data - State-specific data
+ */
+async function showSustainabilityOverlay(state, data) {
+  // Ensure overlay container exists
+  let sustainabilityHost = document.getElementById('sustainability-overlay-host');
+  
+  if (!sustainabilityHost) {
+    console.log('[Sustainability Overlay] Creating overlay container...');
+    sustainabilityHost = document.createElement('div');
+    sustainabilityHost.id = 'sustainability-overlay-host';
+    sustainabilityHost.style.all = 'initial';
+    document.documentElement.appendChild(sustainabilityHost);
     
-    container.classList.remove('pos-top-right', 'pos-top-left', 'pos-bottom-right', 'pos-bottom-left', 'pos-center');
+    const shadow = sustainabilityHost.attachShadow({ mode: 'open' });
     
-    const position = settings?.overlayPosition || 'top-right';
-    container.classList.add(`pos-${position}`);
-    console.log('Applied position:', position);
-  }
-
-  // Check AI availability
-  async function checkAvailability() {
-    try {
-      if (!window.LanguageModel) {
-        pill.textContent = '❌ LanguageModel API not available. Enable the flag!';
-        pill.style.background = 'rgba(255,235,235,0.40)';
-        return;
-      }
-
-      const availability = await LanguageModel.availability();
-      
-      if (availability === 'readily' || availability === 'available') {
-        pill.textContent = '✅ AI is ready!';
-        pill.style.background = 'rgba(230,255,235,0.35)';
-        streamBtn.disabled = false;
-        getBtn.disabled = false;
-        
-        await loadSettings();
-        const createOptions = {};
-        if (settings.systemPrompt) createOptions.systemPrompt = settings.systemPrompt;
-        if (settings.temperature !== undefined) createOptions.temperature = settings.temperature;
-        if (settings.topK !== undefined) createOptions.topK = settings.topK;
-        
-        session = await LanguageModel.create(createOptions);
-        console.log('Session created with options:', createOptions);
-        
-        pill.textContent = `✅ AI Ready | Temp: ${session.temperature} | TopK: ${session.topK}`;
-        pill.style.fontSize = '12px';
-      } else if (availability === 'after-download') {
-        pill.textContent = '⏳ AI model is downloading. Check chrome://components';
-      } else {
-        pill.textContent = `⚠️ AI availability: ${availability}`;
-      }
-    } catch (error) {
-      pill.textContent = `❌ Error: ${error.message}`;
-      pill.style.background = 'rgba(255,235,235,0.40)';
-    }
-  }
-
-  // Stream response
-  streamBtn.addEventListener('click', async () => {
-    const promptText = input.value.trim();
-    if (!promptText) {
-      output.textContent = 'Please enter a prompt first.';
-      return;
-    }
+    // Load CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = chrome.runtime.getURL('src/overlay.css');
+    shadow.appendChild(link);
     
-    try {
-      streamBtn.disabled = true;
-      getBtn.disabled = true;
-      output.textContent = 'Thinking...';
-      output.style.fontStyle = 'italic';
-      
-      const stream = session.promptStreaming(promptText);
-      output.textContent = '';
-      output.style.fontStyle = 'normal';
-      
-      let fullResponse = '';
-      for await (const chunk of stream) {
-        fullResponse += chunk;
-        output.textContent = fullResponse;
-      }
-    } catch (error) {
-      output.textContent = `Error: ${error.message}`;
-      output.style.background = 'rgba(255,240,240,0.25)';
-    } finally {
-      streamBtn.disabled = false;
-      getBtn.disabled = false;
-    }
+    // Create container structure
+    const container = document.createElement('div');
+    container.className = 'ai-glass-container pos-bottom-right is-open';
+    container.id = 'sustainability-container';
+    
+    const panel = document.createElement('div');
+    panel.className = 'ai-glass-panel';
+    panel.id = 'sustainability-panel';
+    
+    // Add drag handle
+    const dragHandle = document.createElement('div');
+    dragHandle.className = 'ai-drag-handle';
+    dragHandle.title = 'Drag to move';
+    dragHandle.innerHTML = `
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="7" cy="5" r="1.5" fill="currentColor"/>
+        <circle cx="13" cy="5" r="1.5" fill="currentColor"/>
+        <circle cx="7" cy="10" r="1.5" fill="currentColor"/>
+        <circle cx="13" cy="10" r="1.5" fill="currentColor"/>
+        <circle cx="7" cy="15" r="1.5" fill="currentColor"/>
+        <circle cx="13" cy="15" r="1.5" fill="currentColor"/>
+      </svg>
+    `;
+    
+    panel.appendChild(dragHandle);
+    container.appendChild(panel);
+    shadow.appendChild(container);
+    
+    // Setup drag functionality
+    setupDragFunctionality(dragHandle, container);
+    
+    // Store references
+    sustainabilityHost._shadow = shadow;
+    sustainabilityHost._container = container;
+    sustainabilityHost._panel = panel;
+  }
+  
+  const panel = sustainabilityHost._panel;
+  
+  // Dynamic import UI components
+  const { 
+    createLoadingState, 
+    createErrorState, 
+    buildSustainabilityPanel,
+    createCloseButton
+  } = await import(chrome.runtime.getURL('src/utils/uiComponents.js'));
+  
+  // Clear current content (preserve drag handle)
+  const dragHandle = panel.querySelector('.ai-drag-handle');
+  panel.innerHTML = '';
+  if (dragHandle) {
+    panel.appendChild(dragHandle);
+  }
+  
+  // Add close button
+  const closeBtn = createCloseButton(() => {
+    sustainabilityHost._container.classList.remove('is-open');
   });
-
-  // Get response
-  getBtn.addEventListener('click', async () => {
-    const promptText = input.value.trim();
-    if (!promptText) {
-      output.textContent = 'Please enter a prompt first.';
-      return;
-    }
-    
-    try {
-      streamBtn.disabled = true;
-      getBtn.disabled = true;
-      output.textContent = 'Thinking...';
-      output.style.fontStyle = 'italic';
+  panel.appendChild(closeBtn);
+  
+  // Render based on state
+  switch (state) {
+    case 'loading':
+      panel.appendChild(createLoadingState(data));
+      break;
       
-      const result = await session.prompt(promptText);
+    case 'results':
+      panel.appendChild(buildSustainabilityPanel(data));
+      break;
       
-      output.textContent = result;
-      output.style.fontStyle = 'normal';
-    } catch (error) {
-      output.textContent = `Error: ${error.message}`;
-      output.style.background = 'rgba(255,240,240,0.25)';
-    } finally {
-      streamBtn.disabled = false;
-      getBtn.disabled = false;
-    }
-  });
+    case 'error':
+      panel.appendChild(createErrorState(data));
+      break;
+  }
+  
+  // Make sure it's visible
+  sustainabilityHost._container.classList.add('is-open');
+}
 
-  // Drag functionality
+/**
+ * Setup drag functionality for overlay
+ * @param {HTMLElement} dragHandle - Drag handle element
+ * @param {HTMLElement} container - Container element
+ */
+function setupDragFunctionality(dragHandle, container) {
   let isDragging = false;
   let currentX = 0, currentY = 0;
   let initialX = 0, initialY = 0;
@@ -306,53 +251,177 @@ if (!host){
   
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
+}
 
-  // Close on ESC
-  window.addEventListener('keydown', (e)=>{ 
-    if(e.key==='Escape' && container.classList.contains('is-open')) {
-      container.classList.remove('is-open'); 
-    }
-  });
+// Run advisor on page load
+initializeSustainabilityAdvisor();
 
-  // Listen for messages
-  chrome.runtime.onMessage.addListener((msg, sender, sendResponse)=>{
-    console.log('Overlay received message:', msg);
+// ============================================================================
+// END SUSTAINABILITY ADVISOR
+// ============================================================================
+
+// ============================================================================
+// MESSAGE LISTENER: Toggle Sustainability Overlay with Keyboard Shortcut
+// ============================================================================
+
+/**
+ * Listen for keyboard shortcut to toggle sustainability overlay
+ */
+chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
+  console.log('[Overlay] Received message:', msg);
+  
+  if (msg?.type === 'TOGGLE_GLASS') {
+    const sustainabilityHost = document.getElementById('sustainability-overlay-host');
     
-    if(msg?.type==='TOGGLE_GLASS'){
+    // If overlay exists, just toggle it regardless of page type
+    if (sustainabilityHost && sustainabilityHost._container) {
+      const container = sustainabilityHost._container;
       const wasOpen = container.classList.contains('is-open');
       container.classList.toggle('is-open');
       const isOpen = container.classList.contains('is-open');
       
-      console.log('Overlay toggled:', wasOpen ? 'open->closed' : 'closed->open');
-      
-      if (isOpen) {
-        if (!settings) {
-          loadSettings().then(() => applyPosition());
-        } else {
-          applyPosition();
-        }
-        if (!session) checkAvailability();
-      }
-      
-      sendResponse({success: true, isOpen});
-    } else if(msg?.type==='SETTINGS_UPDATED'){
-      console.log('Settings updated, reloading...');
-      settings = msg.settings;
-      applyPosition();
-      session = null;
-      checkAvailability();
-      sendResponse({success: true});
+      console.log('[Overlay] Overlay toggled:', wasOpen ? 'open->closed' : 'closed->open');
+      sendResponse({ success: true, isOpen });
+      return true;
     }
-    return true;
-  });
+    
+    // No overlay exists yet - check if we should create one
+    
+    // Check if detection has completed
+    if (window._isProductPage === false) {
+      // Detected as not a product page - show informative message
+      console.log('[Overlay] Not on product page, showing info message');
+      await showNotProductPageMessage();
+      sendResponse({ success: true, isOpen: true, isProductPage: false });
+      return true;
+    }
+    
+    // If still initializing, try to detect now
+    if (window._isProductPage === undefined) {
+      try {
+        console.log('[Overlay] Detection not complete, checking now...');
+        const { sustainabilityAdvisor } = await import(
+          chrome.runtime.getURL('src/core/SustainabilityAdvisor.js')
+        );
+        await sustainabilityAdvisor.initialize();
+        const detection = sustainabilityAdvisor.detectProductPage();
+        
+        if (!detection) {
+          window._isProductPage = false;
+          await showNotProductPageMessage();
+          sendResponse({ success: true, isOpen: true, isProductPage: false });
+          return true;
+        }
+        window._isProductPage = true;
+      } catch (error) {
+        console.error('[Overlay] Error during manual detection:', error);
+      }
+    }
+    
+    // If we get here, something went wrong
+    console.warn('[Overlay] Sustainability overlay not initialized - may not be a product page');
+    sendResponse({ success: false, message: 'Overlay not available on this page' });
+  }
+  
+  return true;
+});
 
-  console.log('[AI Glass Overlay] Message listener registered');
-
-  // Initialize
-  loadSettings().then(() => {
-    applyPosition();
-    checkAvailability();
+/**
+ * Show a message when user toggles on a non-product page
+ */
+async function showNotProductPageMessage() {
+  // Ensure overlay container exists
+  let sustainabilityHost = document.getElementById('sustainability-overlay-host');
+  
+  if (!sustainabilityHost) {
+    console.log('[Overlay] Creating overlay for non-product page message...');
+    sustainabilityHost = document.createElement('div');
+    sustainabilityHost.id = 'sustainability-overlay-host';
+    sustainabilityHost.style.all = 'initial';
+    document.documentElement.appendChild(sustainabilityHost);
+    
+    const shadow = sustainabilityHost.attachShadow({ mode: 'open' });
+    
+    // Load CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = chrome.runtime.getURL('src/overlay.css');
+    shadow.appendChild(link);
+    
+    // Create container structure (compact for non-product page)
+  const container = document.createElement('div');
+    container.className = 'ai-glass-container pos-bottom-right is-open compact-message';
+    container.id = 'sustainability-container';
+    
+    const panel = document.createElement('div');
+    panel.className = 'ai-glass-panel';
+    panel.id = 'sustainability-panel';
+    
+    // Add drag handle
+    const dragHandle = document.createElement('div');
+    dragHandle.className = 'ai-drag-handle';
+    dragHandle.title = 'Drag to move';
+    dragHandle.innerHTML = `
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="7" cy="5" r="1.5" fill="currentColor"/>
+          <circle cx="13" cy="5" r="1.5" fill="currentColor"/>
+          <circle cx="7" cy="10" r="1.5" fill="currentColor"/>
+          <circle cx="13" cy="10" r="1.5" fill="currentColor"/>
+          <circle cx="7" cy="15" r="1.5" fill="currentColor"/>
+          <circle cx="13" cy="15" r="1.5" fill="currentColor"/>
+        </svg>
+    `;
+    
+    panel.appendChild(dragHandle);
+    container.appendChild(panel);
+  shadow.appendChild(container);
+    
+    // Setup drag functionality
+    setupDragFunctionality(dragHandle, container);
+    
+    // Store references
+    sustainabilityHost._shadow = shadow;
+    sustainabilityHost._container = container;
+    sustainabilityHost._panel = panel;
+  }
+  
+  const panel = sustainabilityHost._panel;
+  const container = sustainabilityHost._container;
+  
+  // Ensure compact styling
+  container.classList.add('compact-message');
+  
+  // Dynamic import UI components
+  const { createCloseButton } = await import(chrome.runtime.getURL('src/utils/uiComponents.js'));
+  
+  // Clear current content (preserve drag handle)
+  const dragHandle = panel.querySelector('.ai-drag-handle');
+  panel.innerHTML = '';
+  if (dragHandle) {
+    panel.appendChild(dragHandle);
+  }
+  
+  // Add close button
+  const closeBtn = createCloseButton(() => {
+    sustainabilityHost._container.classList.remove('is-open');
   });
-} else {
-  console.log('[AI Glass Overlay] Already initialized');
+  panel.appendChild(closeBtn);
+  
+  // Create not-a-product-page message
+  const messageContent = document.createElement('div');
+  messageContent.className = 'sustainability-content';
+  messageContent.innerHTML = `
+    <div class="not-product-page-message">
+      <div class="message-icon">🔍</div>
+      <h2 class="message-title">Not a Product Page</h2>
+      <p class="message-text">Navigate to a product page to see sustainability analysis.</p>
+    </div>
+  `;
+  
+  panel.appendChild(messageContent);
+  
+  // Make sure it's visible
+  sustainabilityHost._container.classList.add('is-open');
 }
+
+console.log('[Overlay] Message listener registered for sustainability overlay toggle');

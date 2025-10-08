@@ -82,8 +82,8 @@ export class AIAnalyzer {
       // Create session with scoring-optimized parameters
       const session = await LanguageModel.create({
         systemPrompt: this.buildSystemPrompt(),
-        temperature: 0.4,  // Low for consistent scoring
-        topK: Math.min(40, maxTopK)
+        temperature: 0.3,  // Low for consistent scoring (0.2-0.4 range)
+        topK: Math.min(10, maxTopK)  // Low topK for stable, repeatable scores
       });
       
       console.log(`[AIAnalyzer] Session created (quota: ${session.inputQuota} tokens)`);
@@ -127,6 +127,52 @@ export class AIAnalyzer {
           throw new Error('Invalid response structure: missing extracted or score fields');
         }
         
+        // Ensure arrays exist (defensive programming)
+        if (!result.extracted.materials) result.extracted.materials = [];
+        if (!result.extracted.certifications) result.extracted.certifications = [];
+        if (!result.score.strengths) result.score.strengths = [];
+        if (!result.score.concerns) result.score.concerns = [];
+        if (!result.score.recommendation) result.score.recommendation = 'Based on the available data, consider the environmental impact shown in the breakdown above.';
+        
+        // Validate and fix material percentages
+        if (result.extracted.materials && result.extracted.materials.length > 0) {
+          const totalPercentage = result.extracted.materials.reduce((sum, m) => sum + (m.percentage || 0), 0);
+          
+          console.log(`[AIAnalyzer] 📊 Material validation: ${result.extracted.materials.length} materials, total percentage: ${totalPercentage}`);
+          
+          // If percentages are in 0-100 range instead of 0-1, normalize them
+          if (totalPercentage > 2) {
+            console.warn('[AIAnalyzer] ⚠️ Percentages appear to be in 0-100 range, normalizing to 0-1...');
+            result.extracted.materials = result.extracted.materials.map(m => ({
+              ...m,
+              percentage: (m.percentage || 0) / 100
+            }));
+          }
+          
+          // If percentages don't sum to ~1.0, normalize them
+          const newTotal = result.extracted.materials.reduce((sum, m) => sum + (m.percentage || 0), 0);
+          if (Math.abs(newTotal - 1.0) > 0.05 && newTotal > 0) {
+            console.warn(`[AIAnalyzer] ⚠️ Percentages don't sum to 1.0 (sum: ${newTotal}), normalizing...`);
+            result.extracted.materials = result.extracted.materials.map(m => ({
+              ...m,
+              percentage: (m.percentage || 0) / newTotal
+            }));
+          }
+          
+          // Log final percentages
+          result.extracted.materials.forEach(m => {
+            console.log(`[AIAnalyzer]   - ${m.name}: ${(m.percentage * 100).toFixed(1)}%`);
+          });
+        }
+        
+        console.log('[AIAnalyzer] ✅ Parsed result:', {
+          materials: result.extracted.materials.length,
+          certifications: result.extracted.certifications.length,
+          strengths: result.score.strengths.length,
+          concerns: result.score.concerns.length,
+          hasRecommendation: !!result.score.recommendation
+        });
+        
         return {
           ...result,
           duration: duration,
@@ -160,21 +206,7 @@ export class AIAnalyzer {
    * Build system prompt for scoring
    */
   buildSystemPrompt() {
-    return `You are a sustainability scoring expert analyzing product environmental impact.
-
-Your task:
-1. Extract materials, percentages, certifications, and sustainability features from product content
-2. Match materials to the provided reference data (200+ materials with GHG scores)
-3. Calculate weighted material scores based on composition percentages
-4. Add bonuses for certifications, durability, and sustainable practices
-5. Apply penalties for non-recyclable materials or hazardous content
-6. Provide transparent score breakdown with clear reasoning
-
-Output Requirements:
-- Always return valid JSON matching the specified schema
-- Be specific about material percentages (estimate if not explicitly stated)
-- Provide actionable recommendations for consumers
-- Explain tradeoffs clearly (e.g., high-GHG material with excellent durability)`;
+    return `You are a sustainability analyst. Extract product materials, calculate environmental scores using reference data, and output JSON only. Be precise with material extraction and percentages. Understand multi-component products (e.g., pillow fill vs cover).`;
   }
 
   /**
@@ -189,12 +221,10 @@ Output Requirements:
       .map(s => `[${s.label || s.type}]\n${s.text}`)
       .join('\n\n');
     
-    // Format matrix as CSV
+    // Format matrix as compact CSV (only essential fields)
     const matrixCSV = [
-      'material,domain_category,unit,ghg_kgco2e_per_kg,recyclable,notes,score_0_100',
-      ...matrix.map(m => 
-        `${m.material},${m.domain_category},${m.unit},${m.ghg_kgco2e_per_kg},${m.recyclable},"${m.notes}",${m.score_0_100}`
-      )
+      'material,score,recyclable',
+      ...matrix.map(m => `${m.material},${m.score_0_100},${m.recyclable}`)
     ].join('\n');
     
     return `
@@ -203,144 +233,96 @@ ${productContent}
 
 ═══════════════════════════════════════════════════════════════
 
-MATERIAL REFERENCE DATA (${matrix.length} materials):
+REFERENCE DATA (${matrix.length} materials with GHG-based scores, higher=better):
 ${matrixCSV}
 
-Each material has a pre-calculated GHG score (0-100, higher=better) based on carbon footprint from credible sources:
-- ICE v3.0 (Inventory of Carbon & Energy)
-- PlasticsEurope eco-profiles
-- USLCI (US Life Cycle Inventory)
-- OWID (Our World in Data - food products)
+═══════════════════════════════════════════════════════════════
+
+TASK: Calculate sustainability score (0-100) using this framework:
+
+1. MATERIAL SCORE (base):
+   ⚠️ CRITICAL: If NO materials are explicitly mentioned, return EMPTY materials array []
+   
+   COMPONENT WEIGHTS (for textile products only):
+   - Pillows: Fill 90%, Cover 10%
+   - Clothing: Outer 80%, Lining 20%
+   - Bedding: Fill 70%, Shell 30%
+   - Bags: Main 85%, Lining 15%
+   
+   RULES:
+   - Extract ONLY if explicitly stated: "100% Cotton", "Polyester fill", "Fabric: Nylon", etc.
+   - For electronics, batteries, non-textile items: typically NO fabric materials → return []
+   - Use decimals (1.0 = 100%, 0.5 = 50%)
+   - Percentages must sum to 1.0
+   - NO hardware (zippers, buttons)
+   - DO NOT INVENT materials if not mentioned
+   - If unsure or no materials found → return []
+   - Calculate: Σ(percentage × reference_score) OR 0 if no materials
+
+2. BONUSES (max +30):
+   Certs: GOTS +10, OEKO-TEX +8, FSC +5, etc. (max +15)
+   Durability: Warranty >5yr +8, Rechargeable +8, etc. (max +10)
+   Packaging: Plastic-free +5, Recyclable +3, etc. (max +5)
+
+3. PENALTIES (max -10):
+   Non-recyclable materials -5, Single-use -5, Hazardous -3
+
+FINAL: base + bonuses - penalties (cap at 100)
+
+TIERS: 90-100=A+, 75-89=A, 60-74=B, 40-59=C, 0-39=D
 
 ═══════════════════════════════════════════════════════════════
 
-SCORING TASK:
+OUTPUT (JSON only, no markdown):
 
-Calculate a holistic sustainability score using this framework:
-
-1. MATERIAL SCORE (base component):
-   - Carefully read the PRODUCT CONTENT above
-   - Identify ALL materials mentioned in THIS SPECIFIC PRODUCT (not from examples)
-   - Determine percentage composition (estimate if not explicitly stated)
-   - Look up each material's reference score in the matrix above
-   - Calculate weighted average: Σ(material_percentage × reference_score)
-   
-   IMPORTANT: Extract materials from the actual product content above, NOT from this example:
-   Example calculation format: (0.92 × score1) + (0.08 × score2) = weighted_score
-   
-   Note: If a material isn't in the matrix, find the closest match or estimate based on similar materials
-
-2. CERTIFICATION BONUS (up to +15 points):
-   - GOTS (Global Organic Textile Standard): +10
-   - OEKO-TEX Standard 100: +8
-   - Cradle to Cradle: +8
-   - Fair Trade Certified: +7
-   - Climate Pledge Friendly: +5
-   - Nordic Swan / EU Ecolabel: +5
-   - GRS (Global Recycled Standard): +5
-   - FSC / PEFC (wood/paper): +5
-   - B Corp: +5
-   - Energy Star: +3
-   - Maximum total: +15 (even if more certs exist)
-
-3. DURABILITY ASSESSMENT (up to +10 points):
-   - Lifetime warranty: +10
-   - Warranty >5 years: +8
-   - Rechargeable (vs disposable): +8
-   - Reusable (vs single-use): +8
-   - Refillable: +6
-   - Warranty 2-5 years: +5
-   - High-quality construction: +5
-   - Replaceable parts: +4
-   - Maximum total: +10
-
-4. PACKAGING (up to +5 points):
-   - Plastic-free packaging: +5
-   - Compostable packaging: +4
-   - Recyclable cardboard/paper: +3
-   - Minimal packaging: +2
-   - Ships in own container: +2
-   - Maximum total: +5
-
-5. CIRCULARITY PENALTY (up to -10 points):
-   - Materials marked "no" recyclability in matrix: -5 per major material
-   - Non-recyclable composite materials: -3
-   - Hazardous substances mentioned: -3
-   - Single-use product: -5
-   - Maximum total: -10
-
-FINAL SCORE CALCULATION:
-- Start with base material score (step 1)
-- Add certification bonus (step 2)
-- Add durability bonus (step 3)
-- Add packaging bonus (step 4)
-- Subtract circularity penalty (step 5)
-- Cap final score at 100 (minimum 0)
-
-SCORE TIERS:
-- 90-100: A+ (Excellent - minimal environmental impact)
-- 75-89:  A  (Good - better than average)
-- 60-74:  B  (Fair - average impact)
-- 40-59:  C  (Concerning - significant impact)
-- 0-39:   D  (Poor - high environmental impact)
-
-═══════════════════════════════════════════════════════════════
-
-OUTPUT FORMAT (valid JSON only, NO markdown code fences):
-
-IMPORTANT: 
-- Output ONLY valid JSON
-- NO markdown formatting (no \`\`\`json or \`\`\` tags)
-- Extract materials from the ACTUAL product content above, not from this template
-- This template shows the structure, but use REAL data from the product
-
+Example with materials - "Pillow: Down Alternative Fill, Cotton Cover":
 {
   "extracted": {
     "materials": [
-      {
-        "name": "[actual material from product]",
-        "percentage": [actual percentage],
-        "reference_score": [score from matrix],
-        "recyclable": "[yes/limited/no from matrix]"
-      }
+      {"name": "Down Alternative", "percentage": 0.9, "reference_score": 42.3, "recyclable": "limited"},
+      {"name": "Cotton", "percentage": 0.1, "reference_score": 95.9, "recyclable": "yes"}
     ],
-    "certifications": ["[actual certifications found]"],
-    "durability_features": ["[actual features found]"],
-    "packaging": "[actual packaging description]",
-    "origin": "[actual origin if found]",
-    "recyclability": "[overall assessment]"
+    "certifications": ["OEKO-TEX"],
+    "durability_features": ["Machine washable"],
+    "packaging": "Recyclable bag",
+    "origin": "Imported",
+    "recyclability": "Limited"
   },
   "score": {
-    "overall": [calculated number 0-100],
-    "tier": "[A+/A/B/C/D]",
-    "breakdown": {
-      "base_material_score": [number],
-      "certification_bonus": [number],
-      "durability_bonus": [number],
-      "packaging_bonus": [number],
-      "circularity_penalty": [number],
-      "calculation": "[show your work]"
-    },
-    "strengths": [
-      "[specific strength 1]",
-      "[specific strength 2]"
-    ],
-    "concerns": [
-      "[specific concern 1]",
-      "[specific concern 2]"
-    ],
-    "recommendation": "[personalized advice for this specific product]"
+    "overall": 55,
+    "tier": "C",
+    "breakdown": {"base_material_score": 43.4, "certification_bonus": 8, "durability_bonus": 5, "packaging_bonus": 2, "circularity_penalty": -3, "calculation": "(0.9×42.3)+(0.1×95.9)+8+5+2-3=55.4"},
+    "strengths": ["OEKO-TEX certified", "Machine washable"],
+    "concerns": ["Synthetic fill", "Limited recyclability"],
+    "recommendation": "The OEKO-TEX certification is solid, and machine washability adds convenience. Main trade-off: synthetic fill isn't as eco-friendly as natural alternatives like organic cotton or kapok, but it's hypoallergenic and more affordable."
   }
 }
 
-CRITICAL REMINDERS:
-- Read the PRODUCT CONTENT section carefully
-- Extract materials that are ACTUALLY in this product
-- For batteries: look for alkaline, lithium, zinc, etc.
-- For clothing: look for cotton, polyester, wool, etc.
-- For electronics: look for aluminum, plastic, glass, silicon, etc.
-- Do NOT copy materials from this template - use REAL product data
-- Output ONLY JSON, no markdown formatting
+Example NO materials found - "Tablet, Battery, Electronics":
+{
+  "extracted": {
+    "materials": [],
+    "certifications": [],
+    "durability_features": ["Rechargeable", "10-hour battery"],
+    "packaging": "Recyclable cardboard",
+    "origin": "Imported",
+    "recyclability": "E-waste recycling required"
+  },
+  "score": {
+    "overall": 40,
+    "tier": "C",
+    "breakdown": {"base_material_score": 0, "certification_bonus": 0, "durability_bonus": 8, "packaging_bonus": 3, "circularity_penalty": -5, "calculation": "0+0+8+3-5=6, adjusted for product type"},
+    "strengths": ["Rechargeable battery", "Long battery life"],
+    "concerns": ["E-waste disposal required"],
+    "recommendation": "The rechargeable battery and long runtime are positives for reducing waste. When it's time to upgrade, use a certified e-waste recycler to keep toxic materials out of landfills."
+  }
+}
+
+STYLE GUIDE:
+- Recommendations: Conversational, specific, actionable. Mention positives first, then trade-offs. Avoid generic phrases like "Good choice" or "Consider X".
+- Strengths/Concerns: Keep concise (3-5 words max per item). Be specific, not vague.
+
+CRITICAL: Return materials:[] if NO fabric/textile materials explicitly mentioned. For electronics/batteries → typically [].
 `;
   }
 
