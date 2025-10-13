@@ -15,20 +15,21 @@ console.log('[AI Glass Overlay] Content script loaded (configuration-driven arch
 // SUSTAINABILITY ADVISOR: Configuration-Driven Product Analysis
 // ============================================================================
 
+// Global state to track if analysis is currently running
+let isAnalysisRunning = false;
+
 /**
  * Initialize and run sustainability analysis with UI integration
  * Uses dynamic import for Chrome extension compatibility
  */
 async function initializeSustainabilityAdvisor() {
-  // Guard against multiple executions
-  let hasStarted = false;
-  
   const runAnalysis = async () => {
     // Prevent race conditions from multiple strategies
-    if (hasStarted) {
+    if (isAnalysisRunning) {
+      console.log('[Overlay] Analysis already running, skipping...');
       return;
     }
-    hasStarted = true;
+    isAnalysisRunning = true;
     
     try {
       // Dynamic import for Chrome extension compatibility
@@ -47,7 +48,7 @@ async function initializeSustainabilityAdvisor() {
         console.log('[Overlay] Not a product page, overlay will remain hidden');
         // Store state for manual toggle
         window._isProductPage = false;
-        hasStarted = false; // Allow retry if page changes
+        isAnalysisRunning = false; // Allow retry if page changes
         return;
       }
       
@@ -78,7 +79,8 @@ async function initializeSustainabilityAdvisor() {
   } catch (error) {
       console.error('[SustainabilityAdvisor] Failed:', error);
       showSustainabilityOverlay('error', error.message);
-      hasStarted = false; // Reset on error to allow retry
+    } finally {
+      isAnalysisRunning = false; // Reset flag when done
     }
   };
 
@@ -96,7 +98,7 @@ async function initializeSustainabilityAdvisor() {
 
   // Strategy 3: Fallback for dynamic content (only if not already started)
   setTimeout(() => {
-    if (!hasStarted) {
+    if (!isAnalysisRunning) {
       runAnalysis();
     }
   }, 300);
@@ -433,6 +435,163 @@ function setupDragFunctionality(dragHandle, container) {
 
 // Run advisor on page load
 initializeSustainabilityAdvisor();
+
+// ============================================================================
+// URL CHANGE DETECTION: Handle SPA Navigation
+// ============================================================================
+
+/**
+ * Monitor URL changes and hide/show overlay accordingly
+ * This handles single-page app navigation (Amazon, Walmart, etc.)
+ */
+let lastUrl = window.location.href;
+
+// Check if we're still on a product page and hide overlay if not
+async function checkUrlChange() {
+  const currentUrl = window.location.href;
+  
+  if (currentUrl !== lastUrl) {
+    console.log('[Overlay] URL changed, checking if still on product page...');
+    console.log('[Overlay] Old URL:', lastUrl);
+    console.log('[Overlay] New URL:', currentUrl);
+    
+    lastUrl = currentUrl;
+    
+    try {
+      // Import and initialize advisor
+      const { sustainabilityAdvisor } = await import(
+        chrome.runtime.getURL('src/core/SustainabilityAdvisor.js')
+      );
+      
+      if (!sustainabilityAdvisor.initialized) {
+        await sustainabilityAdvisor.initialize();
+      }
+      
+      // Check if new URL is a product page
+      const detection = sustainabilityAdvisor.detectProductPage();
+      
+      if (!detection) {
+        // No longer on a product page - hide the overlay and button
+        console.log('[Overlay] Not a product page anymore, hiding overlay...');
+        hideOverlayAndButton();
+        window._isProductPage = false;
+        
+        // Reset advisor state to allow re-analysis if user navigates to another product
+        sustainabilityAdvisor.reset();
+      } else if (window._isProductPage === false) {
+        // Navigated FROM non-product page TO product page
+        console.log('[Overlay] Navigated to product page from non-product page');
+        sustainabilityAdvisor.reset();
+        window._isProductPage = true;
+        isAnalysisRunning = false; // Reset analysis flag
+        
+        // Show overlay and start analysis
+        showOverlayAndButton();
+        setTimeout(() => {
+          initializeSustainabilityAdvisor();
+        }, 500);
+      } else {
+        // Navigated to a different product page
+        console.log('[Overlay] New product page detected:', detection.config.name);
+        console.log('[Overlay] Product ID:', detection.productId);
+        
+        // Check if it's a different product
+        const oldProductId = window.__sustainabilityAdvisorData?.productId;
+        if (oldProductId !== detection.productId) {
+          console.log('[Overlay] Different product detected, resetting for new analysis...');
+          
+          // Hide current overlay
+          hideOverlayAndButton();
+          
+          // Reset state
+          sustainabilityAdvisor.reset();
+          window._isProductPage = true;
+          isAnalysisRunning = false; // Reset analysis flag
+          
+          // Re-run analysis for new product
+          setTimeout(() => {
+            initializeSustainabilityAdvisor();
+          }, 500); // Small delay to let page finish loading
+        } else {
+          console.log('[Overlay] Same product, keeping current overlay');
+          // Make sure overlay is visible in case it was hidden
+          showOverlayAndButton();
+        }
+      }
+    } catch (error) {
+      console.error('[Overlay] Error checking URL change:', error);
+    }
+  }
+}
+
+/**
+ * Hide the overlay and floating button
+ */
+function hideOverlayAndButton() {
+  // Hide floating button
+  const progressHost = document.getElementById('envairo-progress-host');
+  if (progressHost) {
+    progressHost.style.display = 'none';
+    console.log('[Overlay] Floating button hidden');
+  }
+  
+  // Hide main overlay
+  const sustainabilityHost = document.getElementById('sustainability-overlay-host');
+  if (sustainabilityHost && sustainabilityHost._container) {
+    sustainabilityHost._container.classList.remove('is-open');
+    sustainabilityHost.style.display = 'none';
+    console.log('[Overlay] Main overlay hidden');
+  }
+}
+
+/**
+ * Show the overlay and floating button (when navigating to product page)
+ */
+function showOverlayAndButton() {
+  // Show floating button
+  const progressHost = document.getElementById('envairo-progress-host');
+  if (progressHost) {
+    progressHost.style.display = '';
+    console.log('[Overlay] Floating button shown');
+  }
+  
+  // Show main overlay (but keep it closed initially)
+  const sustainabilityHost = document.getElementById('sustainability-overlay-host');
+  if (sustainabilityHost) {
+    sustainabilityHost.style.display = '';
+    console.log('[Overlay] Main overlay container shown');
+  }
+}
+
+// Monitor URL changes using multiple strategies
+
+// Strategy 1: Listen for popstate (back/forward buttons)
+window.addEventListener('popstate', () => {
+  console.log('[Overlay] popstate event detected');
+  setTimeout(checkUrlChange, 100);
+});
+
+// Strategy 2: Monitor pushState and replaceState (programmatic navigation)
+const originalPushState = history.pushState;
+const originalReplaceState = history.replaceState;
+
+history.pushState = function(...args) {
+  originalPushState.apply(this, args);
+  console.log('[Overlay] pushState detected');
+  setTimeout(checkUrlChange, 100);
+};
+
+history.replaceState = function(...args) {
+  originalReplaceState.apply(this, args);
+  console.log('[Overlay] replaceState detected');
+  setTimeout(checkUrlChange, 100);
+};
+
+// Strategy 3: Poll for URL changes (fallback for edge cases)
+// This catches any navigation we might have missed
+setInterval(checkUrlChange, 2000);
+
+console.log('[Overlay] URL change monitoring active');
 
 // ============================================================================
 // END SUSTAINABILITY ADVISOR

@@ -18,7 +18,8 @@ export class ConfigLoader {
       // Load all site configs
       const siteConfigs = [
         'amazon.json',
-        // Future: 'ebay.json', 'walmart.json', etc.
+        'walmart.json',
+        // Future: 'ebay.json', 'target.json', etc.
       ];
 
       for (const configFile of siteConfigs) {

@@ -1,0 +1,300 @@
+{
+  "id": "walmart-us",
+  "name": "Walmart",
+  "version": "1.0.0",
+  "enabled": true,
+  "detection": {
+    "urlPatterns": [
+      {
+        "pattern": "https?:\\/\\/www\\.walmart\\.com\\/ip\\/[^\\/]+\\/(\\d+)",
+        "productIdGroup": 1
+      }
+    ],
+    "domSignals": [
+      "[itemprop=\"name\"]",
+      "[data-automation-id=\"product-title\"]",
+      "#product-description-atf"
+    ]
+  },
+  "extraction": {
+    "selectors": {
+      "alwaysInclude": [
+        {
+          "selector": "[itemprop=\"name\"]",
+          "label": "Product Title (Schema.org)",
+          "baseScore": 0.90,
+          "priority": "critical"
+        },
+        {
+          "selector": "[data-automation-id=\"product-title\"]",
+          "label": "Product Title",
+          "baseScore": 0.90,
+          "priority": "critical"
+        },
+        {
+          "selector": "#product-description-atf",
+          "label": "About This Item (Above the Fold)",
+          "baseScore": 0.85,
+          "priority": "critical"
+        },
+        {
+          "selector": "#ip-prod-desc-atf-div-1",
+          "label": "Product Description Container",
+          "baseScore": 0.85,
+          "priority": "critical"
+        },
+        {
+          "selector": "[data-testid=\"specifications\"]",
+          "label": "Specifications Section",
+          "baseScore": 0.85,
+          "priority": "critical"
+        },
+        {
+          "selector": "#specifications-wrapper",
+          "label": "Specifications Wrapper",
+          "baseScore": 0.85,
+          "priority": "critical"
+        },
+        {
+          "selector": "#item-product-details",
+          "label": "Product Details Section",
+          "baseScore": 0.80,
+          "priority": "high"
+        },
+        {
+          "selector": "[data-testid=\"product-description-content\"]",
+          "label": "Product Description Content",
+          "baseScore": 0.80,
+          "priority": "high"
+        },
+        {
+          "selector": ".dangerous-html",
+          "label": "Formatted Product Content",
+          "baseScore": 0.75,
+          "priority": "high"
+        },
+        {
+          "selector": "[data-testid=\"product-description\"]",
+          "label": "Product Description Module",
+          "baseScore": 0.75,
+          "priority": "high"
+        },
+        {
+          "selector": "#product-description-section",
+          "label": "Full Product Description Section",
+          "baseScore": 0.70,
+          "priority": "medium"
+        }
+      ],
+      "conditionalInclude": [
+        {
+          "selector": ".expand-collapse-content",
+          "label": "Expandable Content (Mixed)",
+          "baseScore": 0.65,
+          "requiresKeywords": true
+        },
+        {
+          "selector": "#item-ratings-reviews-section",
+          "label": "Reviews Section",
+          "baseScore": 0.50,
+          "requiresKeywords": true
+        }
+      ]
+    },
+    "keywords": {
+      "materials": [
+        "material", "materials", "fabric", "composition", "shell", "lining", "upper", "outsole", "insole",
+        "leather", "cotton", "polyester", "nylon", "viscose", "elastane", "spandex", "wool", "silk",
+        "hemp", "linen", "down", "fill", "wood", "rubber", "eva", "tpu", "tpe", "pu", "bpa", "microfiber",
+        "plastic", "metal", "aluminum", "steel", "glass", "ceramic", "bamboo", "cork",
+        "rayon", "acrylic", "modal", "tencel", "lyocell", "acetate", "denim", "canvas", "fleece",
+        "mesh", "suede", "velvet", "satin", "chiffon", "jersey", "knit", "woven", "corduroy",
+        "crafted", "care instructions", "wash", "breathability", "moisture-wicking", "made of", "made from"
+      ],
+      "sustainability": [
+        "sustainab", "recycled", "recyclable", "biodegrad", "compostable", "organic",
+        "eco", "environment", "packaging", "responsibly", "ethically", "renewable",
+        "carbon neutral", "carbon-neutral", "waterless", "eco-friendly",
+        "manufacturing practices", "responsibly sourced", "fair trade", "green",
+        "reduced packaging", "minimal packaging", "reusable packaging"
+      ],
+      "certifications": [
+        "fsc", "pefc", "oeko-tex", "gots", "bluesign", "b corp",
+        "grs", "certified", "certification", "nordic swan", "ecolabel",
+        "safer chemicals", "cradle to cradle", "fair trade certified",
+        "energy star", "usda organic", "rainforest alliance"
+      ],
+      "ingredients": [
+        "ingredient", "inci", "allergen", "nutrition", "nutritional",
+        "additives", "preservatives", "paraben", "sulfate", "phthalate",
+        "fragrance", "safety information", "directions", "usage"
+      ]
+    },
+    "patterns": [
+      {
+        "pattern": "made (of|from|with)",
+        "category": "material",
+        "description": "Catches 'made of X', 'made from X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "composed of",
+        "category": "material",
+        "description": "Catches 'composed of X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "crafted from",
+        "category": "material",
+        "description": "Catches 'crafted from X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "material:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Catches 'Material: X' or 'Material X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "fabric:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Catches 'Fabric: X'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "fabric type",
+        "category": "material",
+        "description": "Structured data indicator",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "care instructions",
+        "category": "material",
+        "description": "Often near materials section",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "\\d+%\\s+[\\w\\-]+",
+        "category": "material",
+        "description": "Catches '50% cotton', '100% recycled'",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "ingredients?:",
+        "category": "ingredient",
+        "description": "Ingredient list indicator",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "contains?:",
+        "category": "ingredient",
+        "description": "Contains statement",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "certified (by|to)",
+        "category": "certification",
+        "description": "Certification indicator",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "certification",
+        "category": "certification",
+        "description": "Generic certification mention",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "upper:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Footwear material (upper)",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "outsole:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Footwear material (outsole)",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "insole:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Footwear material (insole)",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "lining:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Garment lining material",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "fill:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Fill material (down, etc.)",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "shell:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Shell material",
+        "bonus": 0.10
+      },
+      {
+        "pattern": "construction:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Construction details",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "finish:?\\s*[\\w\\-]+",
+        "category": "material",
+        "description": "Finish details",
+        "bonus": 0.05
+      },
+      {
+        "pattern": "imported",
+        "category": "material",
+        "description": "Origin information",
+        "bonus": 0.03
+      },
+      {
+        "pattern": "product details",
+        "category": "material",
+        "description": "Section that often has materials",
+        "bonus": 0.05
+      }
+    ],
+    "scoring": {
+      "keywordFamilyBonus": 0.05,
+      "patternMatchBonus": 0.10,
+      "maxScore": 1.0
+    }
+  },
+  "analysis": {
+    "summarizer": {
+      "sharedContext": "Extract sustainability and environmental information from this Walmart product. Focus on: materials (including exact material names and percentages), environmental certifications, recycled content, packaging sustainability, manufacturing origin, and environmental impact. Include product features that indicate sustainability such as: durability (warranty length, construction quality), reusability (reusable, refillable, rechargeable), energy efficiency, repairability (replaceable parts), and multi-functionality. Ignore only: pricing, shipping costs, color options, and purely aesthetic features.",
+      "type": "key-points",
+      "format": "plain-text",
+      "length": "long",
+      "inputQuotaUsage": 0.85
+    },
+    "structuredExtraction": {
+      "enabled": false,
+      "systemPrompt": "You extract structured sustainability data from product summaries into JSON format.",
+      "outputSchema": {
+        "materials": "array",
+        "certifications": "array",
+        "recycledContent": "string",
+        "packaging": "string",
+        "origin": "string"
+      }
+    }
+  },
+  "metadata": {
+    "author": "Chrome Built-in AI Extension",
+    "created": "2025-10-13T00:00:00Z",
+    "lastUpdated": "2025-10-13T00:00:00Z",
+    "notes": "Walmart configuration based on actual HTML analysis. Key findings: Walmart uses Schema.org itemprop attributes, data-automation-id for titles, and data-testid for content sections. Material information appears in #product-description-atf (About this item), #item-product-details (Product details), and [data-testid='specifications'] (Specifications with Fabric Content field). The .dangerous-html class contains formatted content with structured material info."
+  }
+}
+

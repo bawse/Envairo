@@ -64,7 +64,8 @@ This extension demonstrates the capabilities of Chrome's Prompt API and Summariz
 ### Currently Supported Sites
 
 - **Amazon** (all domains: .com, .co.uk, .de, .fr, .ca, .in, .it, .es, .com.au, .co.jp)
-- Automatically detects product pages and analyzes sustainability
+- **Walmart** (walmart.com)
+- Automatically detects product pages and hides overlay when navigating away
 
 ### Key Capabilities
 
