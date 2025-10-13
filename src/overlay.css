@@ -42,8 +42,8 @@
 }
 
 .ai-glass-container.pos-bottom-right{
-  bottom: 6vh; 
-  right: 4vw;
+  bottom: 108px; /* Float above the button: 64px button + 24px button offset + 20px gap */
+  right: 24px; /* Align with button's right edge */
   top: auto;
   left: auto;
 }
@@ -1165,5 +1165,96 @@
   color: rgba(11, 15, 19, 0.65);
   margin: 0;
   max-width: 280px;
+}
+
+/* ===== Floating Circular Progress Button ===== */
+.floating-progress-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483647;
+  width: 64px;
+  height: 64px;
+  cursor: pointer;
+  animation: floatIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes floatIn {
+  0% {
+    transform: scale(0) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.floating-progress-button:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+.progress-button-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Circular progress ring */
+.progress-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+  fill: none;
+  stroke: #2EB84C;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.progress-ring-bg {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.1);
+  stroke-width: 3;
+}
+
+/* Logo container */
+.progress-button-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(46, 184, 76, 0.2);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(46, 184, 76, 0.4);
+  }
+}
+
+.progress-button-logo img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 

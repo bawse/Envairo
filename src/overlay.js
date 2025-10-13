@@ -153,11 +153,141 @@ async function saveProductToHistory(result) {
 }
 
 /**
+ * Show floating progress button during loading
+ * @param {string} phase - 'extracting' or 'analyzing'
+ */
+async function showFloatingProgressButton(phase) {
+  // Check if already exists
+  let progressHost = document.getElementById('envairo-progress-host');
+  
+  if (!progressHost) {
+    // Create shadow DOM for progress button
+    progressHost = document.createElement('div');
+    progressHost.id = 'envairo-progress-host';
+    progressHost.style.all = 'initial';
+    document.documentElement.appendChild(progressHost);
+    
+    const shadow = progressHost.attachShadow({ mode: 'open' });
+    
+    // Load CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = chrome.runtime.getURL('src/overlay.css');
+    shadow.appendChild(link);
+    
+    // Import and create floating button
+    const { createFloatingProgressButton } = await import(
+      chrome.runtime.getURL('src/utils/uiComponents.js')
+    );
+    
+    const button = createFloatingProgressButton(0);
+    shadow.appendChild(button);
+    
+    progressHost._shadow = shadow;
+    progressHost._button = button;
+  }
+  
+  // Animate progress from 0 to 95% (we'll complete at 100% when results come)
+  // Slower animations for better UX
+  animateProgress(0, 95, phase === 'extracting' ? 4000 : 6000);
+}
+
+/**
+ * Animate progress bar
+ * @param {number} start - Start percentage
+ * @param {number} end - End percentage
+ * @param {number} duration - Duration in ms
+ */
+async function animateProgress(start, end, duration) {
+  const { updateFloatingProgress } = await import(
+    chrome.runtime.getURL('src/utils/uiComponents.js')
+  );
+  
+  const startTime = Date.now();
+  const progressDiff = end - start;
+  
+  function update() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Ease out cubic for smooth animation
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    const currentProgress = start + (progressDiff * easeProgress);
+    
+    updateFloatingProgress(currentProgress);
+    
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+  
+  requestAnimationFrame(update);
+}
+
+/**
+ * Convert floating progress button to toggle button
+ */
+async function convertToToggleButton() {
+  const progressHost = document.getElementById('envairo-progress-host');
+  if (!progressHost) return;
+  
+  // Complete to 100% first
+  try {
+    const { updateFloatingProgress, convertButtonToToggle } = await import(
+      chrome.runtime.getURL('src/utils/uiComponents.js')
+    );
+    
+    // Animate to 100%
+    updateFloatingProgress(100);
+    
+    // After brief delay, convert to toggle button
+    setTimeout(() => {
+      convertButtonToToggle();
+      
+      // Add click handler to toggle overlay
+      const button = progressHost._shadow.querySelector('#envairo-progress-button');
+      if (button) {
+        button.style.cursor = 'pointer';
+        button.onclick = () => {
+          const container = document.getElementById('sustainability-overlay-host')?._container;
+          if (container) {
+            const isOpen = container.classList.toggle('is-open');
+            
+            // Update button appearance based on overlay state
+            const logo = button.querySelector('.progress-button-logo');
+            if (logo) {
+              if (isOpen) {
+                // Overlay is open - show active state
+                logo.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(46, 184, 76, 0.5)';
+              } else {
+                // Overlay is closed - show subtle state
+                logo.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(46, 184, 76, 0.2)';
+              }
+            }
+          }
+        };
+      }
+    }, 500);
+  } catch (e) {
+    console.log('[Overlay] Could not update button:', e);
+  }
+}
+
+/**
  * Show/update sustainability overlay
  * @param {string} state - 'loading', 'results', or 'error'
  * @param {*} data - State-specific data
  */
 async function showSustainabilityOverlay(state, data) {
+  // For loading state, show floating button instead
+  if (state === 'loading') {
+    await showFloatingProgressButton(data);
+    return;
+  }
+  
+  // For results/error, convert button to toggle and show full overlay
+  await convertToToggleButton();
+  
   // Ensure overlay container exists
   let sustainabilityHost = document.getElementById('sustainability-overlay-host');
   
@@ -176,7 +306,7 @@ async function showSustainabilityOverlay(state, data) {
     link.href = chrome.runtime.getURL('src/overlay.css');
     shadow.appendChild(link);
     
-    // Create container structure
+    // Create container structure (initially open to show results)
     const container = document.createElement('div');
     container.className = 'ai-glass-container pos-bottom-right is-open';
     container.id = 'sustainability-container';
@@ -217,7 +347,6 @@ async function showSustainabilityOverlay(state, data) {
   
   // Dynamic import UI components
   const { 
-    createLoadingState, 
     createErrorState, 
     buildSustainabilityPanel,
     createCloseButton
@@ -238,10 +367,6 @@ async function showSustainabilityOverlay(state, data) {
   
   // Render based on state
   switch (state) {
-    case 'loading':
-      panel.appendChild(createLoadingState(data));
-      break;
-      
     case 'results':
       panel.appendChild(buildSustainabilityPanel(data));
       break;
@@ -332,6 +457,20 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
       const wasOpen = container.classList.contains('is-open');
       container.classList.toggle('is-open');
       const isOpen = container.classList.contains('is-open');
+      
+      // Update floating button visual state
+      const progressHost = document.getElementById('envairo-progress-host');
+      if (progressHost && progressHost._shadow) {
+        const button = progressHost._shadow.querySelector('#envairo-progress-button');
+        const logo = button?.querySelector('.progress-button-logo');
+        if (logo) {
+          if (isOpen) {
+            logo.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(46, 184, 76, 0.5)';
+          } else {
+            logo.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(46, 184, 76, 0.2)';
+          }
+        }
+      }
       
       console.log('[Overlay] Overlay toggled:', wasOpen ? 'open->closed' : 'closed->open');
       sendResponse({ success: true, isOpen });

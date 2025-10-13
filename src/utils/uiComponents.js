@@ -6,6 +6,100 @@
 import { getIconSVG } from './icons.js';
 
 /**
+ * Create floating circular progress button for loading state
+ * @param {number} progress - Progress percentage (0-100)
+ * @returns {HTMLElement} Floating button element
+ */
+export function createFloatingProgressButton(progress = 0) {
+  const button = document.createElement('div');
+  button.className = 'floating-progress-button';
+  button.id = 'envairo-progress-button';
+  
+  const radius = 29; // Slightly smaller than width/2 to account for stroke
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  
+  const logoUrl = chrome.runtime.getURL('src/icons/icon-64.png');
+  
+  button.innerHTML = `
+    <div class="progress-button-inner">
+      <svg class="progress-ring" width="64" height="64">
+        <circle
+          class="progress-ring-bg"
+          cx="32"
+          cy="32"
+          r="${radius}"
+        />
+        <circle
+          class="progress-ring-circle"
+          cx="32"
+          cy="32"
+          r="${radius}"
+          stroke-dasharray="${circumference}"
+          stroke-dashoffset="${strokeDashoffset}"
+        />
+      </svg>
+      <div class="progress-button-logo">
+        <img src="${logoUrl}" alt="Envairo">
+      </div>
+    </div>
+  `;
+  
+  return button;
+}
+
+/**
+ * Update progress on floating button
+ * @param {number} progress - Progress percentage (0-100)
+ */
+export function updateFloatingProgress(progress) {
+  const progressHost = document.getElementById('envairo-progress-host');
+  if (!progressHost || !progressHost._shadow) return;
+  
+  const button = progressHost._shadow.querySelector('#envairo-progress-button');
+  if (!button) return;
+  
+  const circle = button.querySelector('.progress-ring-circle');
+  if (!circle) return;
+  
+  const radius = 29;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  
+  circle.style.strokeDashoffset = strokeDashoffset;
+}
+
+/**
+ * Convert progress button to toggle button (completed state)
+ */
+export function convertButtonToToggle() {
+  const progressHost = document.getElementById('envairo-progress-host');
+  if (!progressHost || !progressHost._shadow) return;
+  
+  const button = progressHost._shadow.querySelector('#envairo-progress-button');
+  if (!button) return;
+  
+  const logo = button.querySelector('.progress-button-logo');
+  if (!logo) return;
+  
+  // Remove pulse animation
+  logo.style.animation = 'none';
+  
+  // Update shadow to indicate completed/interactive state (active/open state)
+  logo.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(46, 184, 76, 0.5)';
+  logo.style.transition = 'box-shadow 0.3s ease, transform 0.2s ease';
+  
+  // Add hover effect
+  button.onmouseenter = () => {
+    logo.style.transform = 'scale(1.1)';
+  };
+  
+  button.onmouseleave = () => {
+    logo.style.transform = 'scale(1)';
+  };
+}
+
+/**
  * Create loading state UI
  * @param {string} phase - 'extracting' or 'analyzing'
  * @returns {HTMLElement} Loading container
