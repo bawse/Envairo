@@ -67,6 +67,9 @@ async function initializeSustainabilityAdvisor() {
       if (result && result.success) {
         console.log('[Overlay] Analysis complete, displaying results...');
         showSustainabilityOverlay('results', result);
+        
+        // Save to history and notify popup
+        saveProductToHistory(result);
       } else if (result && result.error) {
         console.warn('[Overlay] Analysis failed:', result.error);
         showSustainabilityOverlay('error', result.error);
@@ -97,6 +100,56 @@ async function initializeSustainabilityAdvisor() {
       runAnalysis();
     }
   }, 300);
+}
+
+/**
+ * Save product analysis to history and notify popup
+ * @param {Object} result - Analysis result object
+ */
+async function saveProductToHistory(result) {
+  try {
+    // Extract relevant data for history
+    const productData = {
+      title: result.extracted?.title || document.title,
+      url: window.location.href,
+      site: result.site || 'Unknown',
+      score: result.score?.overall || 0,
+      timestamp: Date.now()
+    };
+    
+    console.log('[Overlay] Saving product to history:', productData);
+    
+    // Load existing history
+    const storage = await chrome.storage.local.get('productHistory');
+    let history = storage.productHistory || [];
+    
+    // Remove duplicates (same URL)
+    history = history.filter(p => p.url !== productData.url);
+    
+    // Add to beginning and limit to 50 items
+    history.unshift(productData);
+    if (history.length > 50) {
+      history = history.slice(0, 50);
+    }
+    
+    // Save back to storage
+    await chrome.storage.local.set({ productHistory: history });
+    
+    // Notify popup if it's open
+    try {
+      chrome.runtime.sendMessage({
+        type: 'PRODUCT_ANALYZED',
+        data: productData
+      });
+    } catch (error) {
+      // Popup might not be open, that's okay
+      console.log('[Overlay] Popup not listening (that\'s okay)');
+    }
+    
+    console.log('[Overlay] Product saved to history successfully');
+  } catch (error) {
+    console.error('[Overlay] Failed to save product to history:', error);
+  }
 }
 
 /**

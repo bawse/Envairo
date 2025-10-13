@@ -9,76 +9,55 @@
       box-sizing: border-box;
     }
 
-    /* ===== iOS Liquid Glass Base ===== */
+    /* ===== Premium Minimal Design ===== */
     :root{
-      --glass-bg: rgba(255,255,255,0.22);
-      --glass-stroke: rgba(255,255,255,0.45);
-      --glass-shadow: 0 18px 50px rgba(0,0,0,0.25);
-      --glass-radius: 22px;
-      --ring-blue: rgba(60,130,255,0.55);
-      --ring-green: rgba(46,184,76,0.50);
-      --text-strong: #0b0f13;
-      --text-weak: rgba(11,15,19,0.7);
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-light: #e5e7eb;
+      --border-medium: #d1d5db;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --accent: #2EB84C;
+      --accent-light: #ecfdf5;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
     }
 
     /* Body fills extension popup */
     body {
-      width: 440px;
-      min-height: 540px;
-      max-height: 600px;
+      width: 400px;
+      height: 560px;
       margin: 0;
       padding: 0;
-      /* Subtle gradient background visible through the glass */
-      background: 
-        linear-gradient(135deg, 
-          rgba(255, 182, 193, 0.2) 0%,
-          rgba(173, 216, 230, 0.2) 25%,
-          rgba(221, 160, 221, 0.2) 50%,
-          rgba(255, 218, 185, 0.2) 75%,
-          rgba(176, 224, 230, 0.2) 100%
-        ),
-        linear-gradient(145deg, #e5e7f0 0%, #d8dce8 100%);
+      background: var(--bg-secondary);
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Optional ambient gradient behind the glass to add depth */
+    /* No ambient background needed */
     .glass-ambient{
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      background: radial-gradient(1200px 800px at 20% 10%, rgba(140,180,255,0.35), transparent 60%),
-                  radial-gradient(900px 700px at 80% 30%, rgba(255,140,200,0.32), transparent 60%),
-                  radial-gradient(900px 700px at 40% 90%, rgba(160,255,210,0.28), transparent 60%);
-      filter: saturate(120%) contrast(105%);
+      display: none;
     }
 
-    /* Main floating panel */
+    /* Main panel */
     .glass-panel{
       position: relative;
       z-index: 2;
-      margin: 20px;
-      max-height: calc(100vh - 40px);
+      margin: 0;
+      height: 100vh;
+      width: 100%;
       overflow-y: auto;
       overflow-x: hidden;
-
-      /* Glass core */
-      background: var(--glass-bg);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-
-      border-radius: var(--glass-radius);
-      box-shadow: var(--glass-shadow);
-      border: 1px solid var(--glass-stroke);
-
-      /* Soft highlight edge */
-      outline: 1px solid rgba(255,255,255,0.18);
-      outline-offset: -1px;
-
-      /* Inner padding/layout */
-      padding: 22px 22px 18px;
-      color: var(--text-strong);
-      font: 500 14px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: var(--bg-primary);
+      padding: 24px 20px 20px;
+      color: var(--text-primary);
     }
 
     .glass-panel h1, .glass-panel h2, .glass-panel h3{
@@ -241,40 +220,24 @@
       50% { opacity: 0.7; }
     }
 
-    /* Scrollbar styling */
-    .glass-output::-webkit-scrollbar,
+    /* Scrollbar styling for main panel */
     .glass-panel::-webkit-scrollbar {
-      width: 10px;
+      width: 6px;
     }
-    .glass-output::-webkit-scrollbar-track,
     .glass-panel::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
-      margin: 6px;
+      background: transparent;
     }
-    .glass-output::-webkit-scrollbar-thumb,
     .glass-panel::-webkit-scrollbar-thumb {
-      background: linear-gradient(135deg, rgba(0, 122, 255, 0.3) 0%, rgba(0, 122, 255, 0.25) 100%);
-      border-radius: 12px;
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      background-clip: padding-box;
+      background: var(--border-light);
+      border-radius: 3px;
     }
-    .glass-output::-webkit-scrollbar-thumb:hover,
     .glass-panel::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(135deg, rgba(0, 122, 255, 0.45) 0%, rgba(0, 122, 255, 0.4) 100%);
+      background: var(--border-medium);
     }
 
-    /* Subtle glow ring around the whole panel (like iOS widgets) */
+    /* Remove glow ring for cleaner popup look */
     .glass-panel::before{
-      content: "";
-      position: absolute; inset: -1px;
-      border-radius: inherit;
-      pointer-events: none;
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.22) inset,
-        0 0 60px rgba(90,150,255,0.20) inset,
-        0 0 70px rgba(255,140,200,0.18) inset;
-      z-index: 1;
+      display: none;
     }
 
     /* Ensure content is above ::before */
@@ -283,316 +246,459 @@
       z-index: 2;
     }
 
-    /* Layout helpers */
-    .mt-12{ margin-top:12px; } 
-    .mt-16{ margin-top:16px; }
-
-    /* Settings-specific styles */
-    .glass-section {
-      padding-top: 16px;
-      border-top: 1px solid rgba(255,255,255,0.2);
+    /* ===== NEW POPUP LAYOUT STYLES ===== */
+    
+    /* Header Section */
+    .header-section {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-light);
     }
 
-    .glass-section:first-of-type {
-      border-top: none;
-    }
-
-    .glass-section h3 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: var(--text-strong);
-    }
-
-    .help-text {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text-weak);
-      margin: 0;
-    }
-
-    kbd {
-      display: inline-block;
-      padding: 3px 7px;
-      font-size: 12px;
-      font-family: ui-monospace, monospace;
-      background: rgba(255,255,255,0.3);
-      border: 1px solid rgba(255,255,255,0.5);
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      font-weight: 600;
-    }
-
-    .settings-label {
+    .header-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .header-top h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .status-badge.ready {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .status-badge.error {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      color: #dc2626;
+    }
+
+    .header-subtitle {
+      margin: 0;
       font-size: 14px;
-      font-weight: 500;
-      color: var(--text-strong);
+      font-weight: 400;
+      color: var(--text-secondary);
+      letter-spacing: 0;
     }
 
-    .toggle-checkbox {
-      width: 44px;
-      height: 24px;
-      appearance: none;
-      background: rgba(120,120,128,0.3);
-      border-radius: 12px;
+    /* Quick Actions - Hidden */
+    .quick-actions {
+      display: none;
+    }
+
+    /* Stats Section */
+    .stats-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 0 0 32px 0;
+    }
+
+    .stat-card {
+      padding: 20px 16px;
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      text-align: center;
+      transition: all 0.2s ease;
       position: relative;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      border: 1px solid rgba(255,255,255,0.4);
+      overflow: hidden;
     }
 
-    .toggle-checkbox:checked {
-      background: rgba(46,184,76,0.6);
+    .stat-card:hover {
+      border-color: var(--border-medium);
+      box-shadow: var(--shadow-sm);
     }
 
-    .toggle-checkbox::before {
-      content: '';
-      position: absolute;
+    .stat-card-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .stat-icon {
       width: 20px;
       height: 20px;
-      border-radius: 50%;
-      background: white;
-      top: 1px;
-      left: 1px;
-      transition: transform 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      opacity: 0.6;
     }
 
-    .toggle-checkbox:checked::before {
-      transform: translateX(20px);
-    }
-
-    .glass-select {
-      padding: 8px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(16px) saturate(170%);
-      -webkit-backdrop-filter: blur(16px) saturate(170%);
-      color: var(--text-strong);
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      outline: none;
-      min-width: 150px;
-    }
-
-    .glass-select:focus {
-      border-color: rgba(60,130,255,0.65);
-      box-shadow: 0 0 0 4px rgba(60,130,255,0.15);
-    }
-
-    .glass-input.small {
-      min-height: 80px;
-      font-size: 13px;
-    }
-
-    .slider {
-      flex: 1;
-      height: 6px;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.3);
-      outline: none;
-      appearance: none;
-      -webkit-appearance: none;
-    }
-
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: rgba(60,130,255,0.9);
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
-    .slider::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: rgba(60,130,255,0.9);
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
-    .slider-value {
-      min-width: 40px;
-      text-align: right;
+    .stat-label {
+      font-size: 11px;
       font-weight: 600;
-      font-size: 13px;
-      color: var(--text-strong);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .glass-message {
-      padding: 12px 16px;
-      border-radius: 12px;
+    /* Score visual indicator */
+    .score-indicator {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-size: 16px;
+      font-weight: 700;
+      position: relative;
+      margin: 0 auto 8px;
+    }
+
+    .score-indicator.excellent {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      color: #059669;
+      border: 2px solid #059669;
+    }
+
+    .score-indicator.good {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #2563eb;
+      border: 2px solid #2563eb;
+    }
+
+    .score-indicator.fair {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #d97706;
+      border: 2px solid #d97706;
+    }
+
+    .score-indicator.poor {
+      background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+      color: #ea580c;
+      border: 2px solid #ea580c;
+    }
+
+    .score-indicator.bad {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #dc2626;
+      border: 2px solid #dc2626;
+    }
+
+    /* History Section */
+    .history-section {
+      margin-top: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .clear-button {
+      padding: 6px 12px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .clear-button:hover {
+      background: var(--bg-secondary);
+      border-color: var(--border-medium);
+      color: #dc2626;
+    }
+
+    /* History List */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-item {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .history-item:hover {
+      border-color: var(--border-medium);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .history-item-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .history-item-title {
+      flex: 1;
       font-size: 14px;
       font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .history-item-score {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 70px;
+      align-items: flex-end;
+    }
+
+    .history-score-number {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .history-score-bar {
+      width: 60px;
+      height: 4px;
+      background: var(--border-light);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .history-score-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .history-score-fill.excellent {
+      background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+    }
+
+    .history-score-fill.good {
+      background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+    }
+
+    .history-score-fill.fair {
+      background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%);
+    }
+
+    .history-score-fill.poor {
+      background: linear-gradient(90deg, #ea580c 0%, #f97316 100%);
+    }
+
+    .history-score-fill.bad {
+      background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+    }
+
+    .history-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .history-item-date {
+      font-weight: 500;
+    }
+
+    .history-item-site {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 48px 24px;
       text-align: center;
+      display: none;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
     }
 
-    .glass-message.success {
-      background: rgba(230,255,235,0.4);
-      border: 1px solid rgba(46,184,76,0.5);
-      color: #2e8b57;
+    .empty-state.visible {
+      display: block;
     }
 
-    .glass-message.error {
-      background: rgba(255,235,235,0.4);
-      border: 1px solid rgba(255,100,100,0.5);
-      color: #c81e1e;
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
     }
+
+    .empty-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .empty-hint {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
 
     /* Fallback for browsers without backdrop-filter */
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
-      .glass-panel, .glass-input, .glass-button, .glass-output, .glass-pill{
-        background: rgba(255,255,255,0.88);
+      .glass-panel{
+        background: rgba(255,255,255,0.90);
       }
     }
-    /* === Neutral overrides (no colored gradients) === */
-    /* POPUP BACKGROUND MUST BE NEUTRAL/TRANSPARENT */
-    html, body {
-      background: transparent !important;
+    
+    /* Popup-specific adjustments */
+    .glass-ambient { 
+      display: none; 
     }
-    
-    /* Remove ambient color wash */
-    .glass-ambient { display: none !important; }
-    
-    /* Neutral, premium iOS glass */
-    :root{
-      --glass-bg: rgba(255,255,255,0.18);
-      --glass-stroke: rgba(255,255,255,0.50);
-      --glass-shadow: 0 22px 60px rgba(0,0,0,0.22);
-      --glass-radius: 22px;
-      --text-strong: #0b0f13;
-      --text-weak: rgba(11,15,19,0.64);
+
+    /* Premium Icon Styles */
+    .icon-svg {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
     }
-    
-    .glass-panel{
-      background: var(--glass-bg) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-      backdrop-filter: blur(24px) saturate(180%) !important;
-      border: 1px solid var(--glass-stroke) !important;
-      box-shadow: var(--glass-shadow) !important;
+
+    .icon-svg.icon-lg {
+      width: 48px;
+      height: 48px;
     }
-    
-    /* Remove the pink/blue inset glow ring */
-    .glass-panel::before{
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.24) inset !important;
+
+    .icon-svg svg {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
-    
-    /* Controls stay glass but neutral */
-    .glass-input,
-    .glass-output,
-    .glass-button{
-      background: rgba(255,255,255,0.18) !important;
-      -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
-      backdrop-filter: blur(18px) saturate(170%) !important;
-      border: 1px solid rgba(255,255,255,0.55) !important;
-      color: var(--text-strong) !important;
-    }
-    
-    /* Accent only via border glow (no filled color) */
-    .glass-button.is-blue{ box-shadow: 0 10px 28px rgba(60,130,255,0.14); border-color: rgba(60,130,255,0.55); }
-    .glass-button.is-green{ box-shadow: 0 10px 28px rgba(46,184,76,0.14); border-color: rgba(46,184,76,0.55); }
-    
-    .glass-button:hover{ background: rgba(255,255,255,0.24) !important; }
   </style>
 </head>
 <body>
   <div class="glass-ambient"></div>
   
   <div class="glass-panel">
-    <h1>🌱 Envairo Settings</h1>
-
-    <div id="status" class="glass-pill mt-12">Checking AI availability...</div>
-
-    <!-- Quick Start -->
-    <div class="glass-section mt-16">
-      <h3>Quick Start</h3>
-      <p class="help-text">Press <kbd>Cmd+Shift+Y</kbd> (Mac) or <kbd>Ctrl+Shift+Y</kbd> (Windows/Linux) to toggle the Sustainability Advisor overlay on product pages.</p>
-      <button id="testOverlayBtn" class="glass-button is-blue mt-12">Toggle Overlay</button>
+    <!-- Header: Status + Quick Toggle -->
+    <div class="header-section">
+      <div class="header-top">
+        <h1>
+          <img src="icons/icon-48.png" alt="Envairo Logo" class="header-logo">
+          Envairo
+        </h1>
+        <div id="status" class="status-badge ready">
+          <span style="display: inline-block; width: 6px; height: 6px; background: currentColor; border-radius: 50%; margin-right: 6px;"></span>
+          Active
+        </div>
+      </div>
     </div>
 
-    <!-- Overlay Settings -->
-    <div class="glass-section mt-16">
-      <h3>Overlay Settings</h3>
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button id="toggleOverlayBtn" class="action-button primary">
+        <span class="button-icon">👁️</span>
+        <div class="button-content">
+          <div class="button-label">Toggle Overlay</div>
+          <div class="button-hint">Cmd/Ctrl + Shift + Y</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- Stats Dashboard -->
+    <div id="statsSection" class="stats-section">
+      <div class="stat-card">
+        <div class="stat-value" id="totalAnalyzed">0</div>
+        <div class="stat-label">Products Analyzed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="avgScore">—</div>
+        <div class="stat-label">Avg. Score</div>
+      </div>
+    </div>
+
+    <!-- Recent Products -->
+    <div class="history-section">
+      <div class="section-header">
+        <h3>Recent Products</h3>
+        <button id="clearHistoryBtn" class="clear-button">Clear All</button>
+      </div>
       
-      <label class="settings-label">
-        <span>Show Overlay on Startup</span>
-        <input type="checkbox" id="showOnStartup" class="toggle-checkbox">
-      </label>
-
-      <label class="settings-label mt-12">
-        <span>Overlay Position</span>
-        <select id="overlayPosition" class="glass-select">
-          <option value="top-right">Top Right</option>
-          <option value="top-left">Top Left</option>
-          <option value="bottom-right">Bottom Right</option>
-          <option value="bottom-left">Bottom Left</option>
-          <option value="center">Center</option>
-        </select>
-      </label>
-    </div>
-
-    <!-- AI Model Settings -->
-    <div class="glass-section mt-16">
-      <h3>AI Model Settings</h3>
+      <div id="historyList" class="history-list">
+        <!-- Products will be inserted here -->
+      </div>
       
-      <label class="settings-label">
-        <span>System Prompt</span>
-        <textarea id="systemPrompt" class="glass-input small" placeholder="You are a helpful assistant...">You are a helpful AI assistant integrated into the browser. Provide concise, accurate, and friendly responses.</textarea>
-      </label>
-
-      <label class="settings-label mt-12">
-        <span>Temperature</span>
-        <input type="range" id="temperature" class="slider" min="0" max="1" step="0.1" value="0.7">
-        <span class="slider-value" id="tempValue">0.7</span>
-      </label>
-
-      <label class="settings-label mt-12">
-        <span>Top K</span>
-        <input type="range" id="topK" class="slider" min="1" max="100" step="1" value="40">
-        <span class="slider-value" id="topKValue">40</span>
-      </label>
+      <div id="emptyState" class="empty-state">
+        <div class="icon-svg icon-lg" style="margin: 0 auto 16px; color: var(--text-tertiary);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="empty-text">No products analyzed yet</div>
+        <div class="empty-hint">Visit a product page to see sustainability analysis</div>
+      </div>
     </div>
-
-    <!-- Privacy & Data -->
-    <div class="glass-section mt-16">
-      <h3>Privacy & Data</h3>
-      
-      <label class="settings-label">
-        <span>Save Conversation History</span>
-        <input type="checkbox" id="saveHistory" class="toggle-checkbox" checked>
-      </label>
-
-      <button id="clearHistoryBtn" class="glass-button mt-12">Clear History</button>
-    </div>
-
-    <!-- About -->
-    <div class="glass-section mt-16">
-      <h3>About</h3>
-      <p class="help-text">Envairo - Sustainability Product Advisor v1.0.0</p>
-      <p class="help-text mt-12">Uses Chrome's Built-in AI Prompt API to provide sustainability insights for products.</p>
-      <button id="checkUpdatesBtn" class="glass-button mt-12">Check for Updates</button>
-    </div>
-
-    <!-- Footer Actions -->
-    <div class="glass-actions mt-16">
-      <button id="resetBtn" class="glass-button">Reset to Defaults</button>
-      <button id="saveBtn" class="glass-button is-green">Save Settings</button>
-    </div>
-
-    <div id="message" class="glass-message mt-12" style="display:none;"></div>
   </div>
 
   <script src="./popup.js"></script>

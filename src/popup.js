@@ -1,182 +1,301 @@
-// Settings management for the AI Assistant extension
+// Popup script for Envairo - Sustainability Product Advisor
 
-// Default settings
-const DEFAULT_SETTINGS = {
-  showOnStartup: false,
-  overlayPosition: 'top-right',
-  systemPrompt: 'You are a helpful AI assistant integrated into the browser. Provide concise, accurate, and friendly responses.',
-  temperature: 0.7,
-  topK: 40,
-  saveHistory: true
-};
+// ============================================================================
+// STATE & INITIALIZATION
+// ============================================================================
 
-// Load settings from storage
-async function loadSettings() {
+let productHistory = [];
+
+// Update extension status
+function updateStatus() {
+  const statusBadge = document.getElementById('status');
+  // Note: AI APIs are only available in content scripts, not extension popups
+  // So we just show that the extension is active
+  statusBadge.innerHTML = '<span style="display: inline-block; width: 6px; height: 6px; background: currentColor; border-radius: 50%; margin-right: 6px;"></span>Active';
+  statusBadge.className = 'status-badge ready';
+}
+
+// Load product history from storage
+async function loadProductHistory() {
   try {
-    const result = await chrome.storage.sync.get('settings');
-    return result.settings || DEFAULT_SETTINGS;
+    const result = await chrome.storage.local.get('productHistory');
+    productHistory = result.productHistory || [];
+    return productHistory;
   } catch (error) {
-    console.error('Error loading settings:', error);
-    return DEFAULT_SETTINGS;
+    console.error('Error loading history:', error);
+    return [];
   }
 }
 
-// Save settings to storage
-async function saveSettings(settings) {
+// Save product history to storage
+async function saveProductHistory(history) {
   try {
-    await chrome.storage.sync.set({ settings });
+    await chrome.storage.local.set({ productHistory: history });
     return true;
   } catch (error) {
-    console.error('Error saving settings:', error);
+    console.error('Error saving history:', error);
     return false;
   }
 }
 
-// Show message to user
-function showMessage(text, type = 'success') {
-  const messageDiv = document.getElementById('message');
-  messageDiv.textContent = text;
-  messageDiv.className = `glass-message mt-12 ${type}`;
-  messageDiv.style.display = 'block';
-  
-  setTimeout(() => {
-    messageDiv.style.display = 'none';
-  }, 3000);
+// ============================================================================
+// UI RENDERING
+// ============================================================================
+
+// Get score category for styling
+function getScoreCategory(score) {
+  if (score >= 80) return 'excellent';
+  if (score >= 60) return 'good';
+  if (score >= 40) return 'fair';
+  if (score >= 20) return 'poor';
+  return 'bad';
 }
 
-// Check AI availability on load
-async function checkAvailability() {
-  const statusDiv = document.getElementById('status');
+// Format date as relative time
+function formatRelativeTime(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
   
-  try {
-    if (!window.LanguageModel) {
-      statusDiv.textContent = '❌ LanguageModel API not available. Make sure you enabled the flag!';
-      statusDiv.className = 'glass-pill error';
-      return;
-    }
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  
+  return new Date(timestamp).toLocaleDateString();
+}
 
-    const availability = await LanguageModel.availability();
-    
-    if (availability === 'available') {
-      statusDiv.textContent = '✅ AI is ready!';
-      statusDiv.className = 'glass-pill';
-    } else if (availability === 'after-download') {
-      statusDiv.textContent = '⏳ AI model is downloading. Check chrome://components';
-      statusDiv.className = 'glass-pill';
-    } else {
-      statusDiv.textContent = `⚠️ AI availability: ${availability}`;
-      statusDiv.className = 'glass-pill';
-    }
-  } catch (error) {
-    console.error('Error checking availability:', error);
-    statusDiv.textContent = `❌ Error: ${error.message}`;
-    statusDiv.className = 'glass-pill error';
+// Render a single history item
+function createHistoryItem(product) {
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.dataset.url = product.url;
+  
+  const scoreCategory = getScoreCategory(product.score);
+  const scorePercentage = Math.min(100, Math.max(0, product.score));
+  
+  item.innerHTML = `
+    <div class="history-item-header">
+      <div class="history-item-title">${product.title}</div>
+      <div class="history-item-score">
+        <span class="history-score-number">${product.score}/100</span>
+        <div class="history-score-bar">
+          <div class="history-score-fill ${scoreCategory}" style="width: ${scorePercentage}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="history-item-meta">
+      <span class="history-item-date">${formatRelativeTime(product.timestamp)}</span>
+      <span>•</span>
+      <span class="history-item-site">${product.site}</span>
+    </div>
+  `;
+  
+  // Make item clickable to open product page
+  item.addEventListener('click', () => {
+    chrome.tabs.create({ url: product.url });
+  });
+  
+  return item;
+}
+
+// Update stats display
+function updateStats(history) {
+  const totalAnalyzed = history.length;
+  const avgScore = history.length > 0
+    ? Math.round(history.reduce((sum, p) => sum + p.score, 0) / history.length)
+    : 0;
+  
+  // Update count
+  const totalElement = document.getElementById('totalAnalyzed');
+  totalElement.innerHTML = `
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    ${totalAnalyzed}
+  `;
+  
+  // Update average score with visual indicator
+  const avgElement = document.getElementById('avgScore');
+  if (history.length > 0) {
+    const scoreCategory = getScoreCategory(avgScore);
+    avgElement.innerHTML = `
+      <div class="score-indicator ${scoreCategory}">
+        ${avgScore}
+      </div>
+    `;
+  } else {
+    avgElement.textContent = '—';
   }
 }
 
-// Populate UI with current settings
-async function populateUI() {
-  const settings = await loadSettings();
+// Render the history list
+function renderHistory(history) {
+  const historyList = document.getElementById('historyList');
+  const emptyState = document.getElementById('emptyState');
   
-  document.getElementById('showOnStartup').checked = settings.showOnStartup;
-  document.getElementById('overlayPosition').value = settings.overlayPosition;
-  document.getElementById('systemPrompt').value = settings.systemPrompt;
-  document.getElementById('temperature').value = settings.temperature;
-  document.getElementById('topK').value = settings.topK;
-  document.getElementById('saveHistory').checked = settings.saveHistory;
+  // Clear existing items
+  historyList.innerHTML = '';
   
-  // Update slider value displays
-  document.getElementById('tempValue').textContent = settings.temperature;
-  document.getElementById('topKValue').textContent = settings.topK;
+  if (history.length === 0) {
+    emptyState.classList.add('visible');
+    historyList.style.display = 'none';
+  } else {
+    emptyState.classList.remove('visible');
+    historyList.style.display = 'flex';
+    
+    // Sort by timestamp (most recent first) and render only top 5
+    const sortedHistory = [...history].sort((a, b) => b.timestamp - a.timestamp);
+    const recentProducts = sortedHistory.slice(0, 5); // Limit to 5 most recent
+    recentProducts.forEach(product => {
+      historyList.appendChild(createHistoryItem(product));
+    });
+  }
+  
+  // Update stats
+  updateStats(history);
 }
 
-// Initialize
+// ============================================================================
+// EVENT HANDLERS
+// ============================================================================
+
+// Toggle overlay on current tab
+async function toggleOverlay() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    // Check if it's a valid URL (not chrome://, etc.)
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+      showNotification('Cannot toggle overlay on this page', 'error');
+      return;
+    }
+    
+    await chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_GLASS' });
+  } catch (error) {
+    console.error('Error toggling overlay:', error);
+    showNotification('Make sure you\'re on a product page', 'error');
+  }
+}
+
+// Clear all history
+async function clearAllHistory() {
+  if (!confirm('Clear all product history? This cannot be undone.')) {
+    return;
+  }
+  
+  productHistory = [];
+  await saveProductHistory(productHistory);
+  renderHistory(productHistory);
+  showNotification('History cleared', 'success');
+}
+
+// Show temporary notification
+function showNotification(message, type = 'info') {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: ${type === 'error' ? 'rgba(255,235,235,0.95)' : 'rgba(230,255,235,0.95)'};
+    border: 1px solid ${type === 'error' ? 'rgba(255,100,100,0.6)' : 'rgba(46,184,76,0.6)'};
+    color: ${type === 'error' ? '#c81e1e' : '#2e8b57'};
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    z-index: 10000;
+    animation: slideDown 0.3s ease;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideUp 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 2500);
+}
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
 document.addEventListener('DOMContentLoaded', async () => {
-  // Check AI availability
-  await checkAvailability();
+  // Update status badge
+  updateStatus();
   
-  // Load and display settings
-  await populateUI();
+  // Load and display history
+  await loadProductHistory();
+  renderHistory(productHistory);
   
-  // Temperature slider
-  document.getElementById('temperature').addEventListener('input', (e) => {
-    document.getElementById('tempValue').textContent = e.target.value;
-  });
+  // Set up event listeners
+  document.getElementById('toggleOverlayBtn').addEventListener('click', toggleOverlay);
+  document.getElementById('clearHistoryBtn').addEventListener('click', clearAllHistory);
   
-  // Top K slider
-  document.getElementById('topK').addEventListener('input', (e) => {
-    document.getElementById('topKValue').textContent = e.target.value;
-  });
-  
-  // Toggle Overlay button
-  document.getElementById('testOverlayBtn').addEventListener('click', async () => {
-    try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      await chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_GLASS' });
-      showMessage('Sustainability Advisor toggled! Press Cmd/Ctrl+Shift+Y to toggle again.', 'success');
-    } catch (error) {
-      console.error('Error toggling overlay:', error);
-      showMessage('Could not toggle overlay. Make sure you\'re on a product page.', 'error');
-    }
-  });
-  
-  // Clear History button
-  document.getElementById('clearHistoryBtn').addEventListener('click', async () => {
-    try {
-      await chrome.storage.local.remove('conversationHistory');
-      showMessage('Conversation history cleared!', 'success');
-    } catch (error) {
-      console.error('Error clearing history:', error);
-      showMessage('Failed to clear history.', 'error');
-    }
-  });
-  
-  // Check Updates button
-  document.getElementById('checkUpdatesBtn').addEventListener('click', () => {
-    showMessage('You are running the latest version!', 'success');
-  });
-  
-  // Reset to Defaults button
-  document.getElementById('resetBtn').addEventListener('click', async () => {
-    if (confirm('Are you sure you want to reset all settings to defaults?')) {
-      await saveSettings(DEFAULT_SETTINGS);
-      await populateUI();
-      showMessage('Settings reset to defaults!', 'success');
-    }
-  });
-  
-  // Save Settings button
-  document.getElementById('saveBtn').addEventListener('click', async () => {
-    const settings = {
-      showOnStartup: document.getElementById('showOnStartup').checked,
-      overlayPosition: document.getElementById('overlayPosition').value,
-      systemPrompt: document.getElementById('systemPrompt').value,
-      temperature: parseFloat(document.getElementById('temperature').value),
-      topK: parseInt(document.getElementById('topK').value),
-      saveHistory: document.getElementById('saveHistory').checked
-    };
-    
-    const success = await saveSettings(settings);
-    
-    if (success) {
-      showMessage('Settings saved successfully!', 'success');
+  // Listen for history updates from content scripts
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'PRODUCT_ANALYZED') {
+      // Add new product to history
+      const newProduct = {
+        title: message.data.title,
+        url: message.data.url,
+        site: message.data.site,
+        score: message.data.score,
+        timestamp: Date.now()
+      };
       
-      // Notify content scripts of settings update
-      try {
-        const tabs = await chrome.tabs.query({});
-        tabs.forEach(tab => {
-          chrome.tabs.sendMessage(tab.id, { 
-            type: 'SETTINGS_UPDATED', 
-            settings 
-          }).catch(() => {
-            // Ignore errors for tabs that don't have content script
-          });
-        });
-      } catch (error) {
-        console.error('Error notifying tabs:', error);
+      // Remove duplicates (same URL)
+      productHistory = productHistory.filter(p => p.url !== newProduct.url);
+      
+      // Add to beginning and limit to 50 items
+      productHistory.unshift(newProduct);
+      if (productHistory.length > 50) {
+        productHistory = productHistory.slice(0, 50);
       }
-    } else {
-      showMessage('Failed to save settings.', 'error');
+      
+      // Save and re-render
+      saveProductHistory(productHistory);
+      renderHistory(productHistory);
     }
   });
+  
+  // Add keyboard shortcut info
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const shortcut = isMac ? 'Cmd+Shift+Y' : 'Ctrl+Shift+Y';
+  document.querySelector('.button-hint').textContent = shortcut;
 });
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -20px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -20px);
+    }
+  }
+`;
+document.head.appendChild(style);

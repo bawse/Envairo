@@ -16,12 +16,12 @@ export function createLoadingState(phase = 'extracting') {
   
   const messages = {
     extracting: {
-      icon: 'sparkles',
+      useImage: true,
       text: 'Analyzing Product...',
       subtext: 'Extracting product information'
     },
     analyzing: {
-      icon: 'spinner',
+      useImage: true,
       text: 'AI Analysis in Progress',
       subtext: 'Powered by Chrome Built-in AI'
     }
@@ -29,10 +29,17 @@ export function createLoadingState(phase = 'extracting') {
   
   const msg = messages[phase] || messages.extracting;
   
+  // Create logo image or icon
+  let iconHtml;
+  if (msg.useImage) {
+    const logoUrl = chrome.runtime.getURL('src/icons/icon-64.png');
+    iconHtml = `<img src="${logoUrl}" alt="Envairo" class="loading-logo" style="width: 64px; height: 64px; object-fit: contain; animation: pulse 2s ease-in-out infinite;">`;
+  } else {
+    iconHtml = `<div class="loading-spinner icon icon-xl">${getIconSVG(msg.icon)}</div>`;
+  }
+  
   container.innerHTML = `
-    <div class="loading-spinner icon icon-xl">
-      ${getIconSVG(msg.icon)}
-    </div>
+    ${iconHtml}
     <div class="loading-text">${msg.text}</div>
     <div class="loading-subtext">${msg.subtext}</div>
     <div class="loading-bar">

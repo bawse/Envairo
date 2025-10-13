@@ -1,119 +1,268 @@
-# Chrome Built-in AI - Sustainability Advisor
+# Envairo - Sustainability Product Advisor
 
-A modern Chrome extension demonstrating Chrome's Built-in AI APIs (Prompt API & Summarizer API) through a **Sustainability Shopping Advisor** for the Google Chrome Built-in AI Challenge 2025.
+**A Chrome extension demonstrating Chrome's Built-in AI APIs for the Google Chrome Built-in AI Challenge 2025**
 
-## 🌱 Sustainability Shopping Advisor
+🌱 **Automatically analyzes products for environmental impact** using on-device AI - no external APIs, complete privacy.
 
-**Current Status**: Phase 2 Complete ✅
+![Chrome Canary Required](https://img.shields.io/badge/Chrome-Canary%20128%2B-yellow)
+![Gemini Nano](https://img.shields.io/badge/AI-Gemini%20Nano-blue)
+![License](https://img.shields.io/badge/license-Open%20Source-green)
 
-The extension automatically analyzes Amazon products for:
-- 📦 Material composition (fabrics, plastics, metals, etc.)
-- 🌿 Environmental certifications (Climate Pledge, GRS, Nordic Swan, etc.)
-- ♻️ Recycled content percentages
-- 🏭 Manufacturing practices
-- 📋 Care instructions and origin
+---
 
-**See [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) for complete documentation.**
+## ✨ Features
 
-## 📁 Project Structure
+- 📊 **Sustainability Scoring**: Analyzes materials, certifications, and environmental impact
+- 🧵 **Material Analysis**: Identifies fabric composition, plastics, and recycled content
+- 🛡️ **Certification Detection**: Recognizes GRS, OEKO-TEX, Climate Pledge, and more
+- 💡 **AI Recommendations**: Provides actionable sustainability advice
+- 🎨 **Beautiful UI**: iOS-inspired glass morphism design
+- 🔒 **100% Private**: All analysis happens on-device with Chrome's Built-in AI
+
+### Currently Supported
+
+- **Amazon** (all domains: .com, .co.uk, .de, .fr, .ca, .in, .it, .es, .com.au, .co.jp)
+- Automatically detects product pages and analyzes sustainability
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+1. **Chrome Canary** (version 128.0.6545.0+)
+   - Download: https://www.google.com/chrome/canary/
+2. **22 GB free storage** (for Gemini Nano model)
+3. **Enable AI flags**
+
+### Setup (5 minutes)
+
+#### 1. Enable Chrome AI APIs
+
+```
+1. Open chrome://flags/#prompt-api-for-gemini-nano
+2. Set to "Enabled"
+3. Open chrome://flags/#summarization-api-for-gemini-nano  
+4. Set to "Enabled"
+5. Relaunch Chrome
+```
+
+#### 2. Download Gemini Nano
+
+```
+1. Open DevTools (F12)
+2. Run: await ai.languageModel.create();
+3. Go to chrome://components
+4. Find "Optimization Guide On Device Model"
+5. Wait for download (10-30 minutes, ~22 GB)
+```
+
+#### 3. Install Extension
+
+```
+1. Download or clone this repository
+2. Open chrome://extensions/
+3. Enable "Developer mode" (top right)
+4. Click "Load unpacked"
+5. Select the extension folder
+```
+
+### Verify Setup
+
+Open DevTools console and run:
+```javascript
+await ai.languageModel.availability();  // Should return "readily"
+```
+
+---
+
+## 📖 Usage
+
+### Automatic Analysis
+
+1. Visit any supported product page (e.g., Amazon product)
+2. Extension automatically analyzes in ~5-10 seconds
+3. Sustainability overlay appears in bottom-right corner
+4. View score, materials, certifications, and recommendations
+
+### Manual Toggle
+
+- Press `Cmd+Shift+Y` (Mac) or `Ctrl+Shift+Y` (Windows/Linux) to toggle overlay
+- Drag overlay to reposition
+- Click X to close
+
+### Features
+
+- **Score Ring**: Overall sustainability score (0-100) with letter grade
+- **Breakdown**: Component scores for materials, certifications, durability, etc.
+- **Materials**: Composition breakdown with sustainability ratings
+- **Certifications**: Detected environmental certifications
+- **Insights**: Key strengths and concerns
+- **Recommendations**: AI-generated actionable advice
+
+---
+
+## 🏗️ Architecture
+
+### Configuration-Driven Design
+
+The extension uses a **modular, configuration-driven architecture** that separates logic from data:
 
 ```
 chrome-built-in/
-├── manifest.json                # Extension configuration
-├── PROJECT_DOCUMENTATION.md     # Complete technical documentation
-├── src/                         # Source code
+├── manifest.json               # Extension configuration
+├── src/
+│   ├── core/                   # Reusable logic modules
+│   │   ├── AIAnalyzer.js       # AI analysis with Prompt API
+│   │   ├── ConfigLoader.js     # Site configuration management
+│   │   ├── ContentExtractor.js # Intelligent content extraction
+│   │   └── SustainabilityAdvisor.js # Main orchestrator
+│   ├── config/                 # Site configurations (JSON)
+│   │   └── sites/
+│   │       └── amazon.json     # Amazon extraction rules
+│   ├── data/                   # Sustainability scoring matrix
+│   │   └── sustainability_matrix.csv
+│   ├── utils/                  # UI components and helpers
+│   │   ├── icons.js
+│   │   ├── uiComponents.js
+│   │   └── csvLoader.js
+│   ├── overlay.js              # Content script entry point
+│   ├── overlay.css             # Glass morphism styles
 │   ├── bg.js                   # Background service worker
-│   ├── overlay.js              # Content script (main logic)
-│   ├── overlay.css             # Overlay styles
-│   ├── popup.html              # Extension popup UI
-│   ├── popup.js                # Popup logic
-│   └── icons/                  # Extension icons
-├── docs/                        # Design documentation
-├── ideas/                       # Future project ideas
-└── README.md                    # This file
+│   ├── popup.html/js           # Extension settings
+│   └── icons/                  # Extension assets
+├── docs/                       # Documentation
+└── ideas/                      # Future feature concepts
 ```
 
-## 🎨 Design Features
+### How It Works
 
-Based on the iOS glass mode aesthetic:
-- **Frosted glass effect** with backdrop blur and semi-transparency
-- **Modern gradient background** (purple gradient)
-- **Smooth transitions** and hover effects
-- **Professional spacing** and typography
-- **Custom styled scrollbars**
-- **Glass-morphism buttons** with subtle shadows
+1. **Detection**: Matches URL against site configs
+2. **Extraction**: Intelligently extracts relevant product sections
+3. **Analysis**: Chrome's Prompt API analyzes for sustainability
+4. **Scoring**: Calculates scores using research-based matrix
+5. **Display**: Beautiful iOS-inspired overlay shows results
 
-## Prerequisites
+**See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for technical details.**
 
-1. **Chrome Canary** (version 128.0.6545.0 or newer)
-2. **Gemini Nano model** downloaded (at least 22 GB free storage)
-3. **Prompt API flag** enabled
+---
 
-## Setup Instructions
+## 🛠️ Development
 
-### 1. Enable the Prompt API
+### Adding a New Site
 
-1. Open Chrome Canary
-2. Go to `chrome://flags/#prompt-api-for-gemini-nano`
-3. Set to **Enabled**
-4. Relaunch Chrome
+Thanks to the configuration-driven architecture, adding new sites is easy:
 
-### 2. Download Gemini Nano
+1. Create `src/config/sites/yoursite.json`
+2. Define URL patterns, selectors, keywords
+3. Register in `ConfigLoader.js`
+4. Test!
 
-1. Open DevTools (F12)
-2. Run in console: `await LanguageModel.create();`
-3. Relaunch Chrome
-4. Go to `chrome://components`
-5. Find "Optimization Guide On Device Model"
-6. Click "Check for update" if needed
-7. Wait for download to complete
+**Time required**: ~20-30 minutes (vs 4-8 hours with hardcoded approach)
 
-### 3. Verify It Works
+### Testing
 
-1. Open DevTools console
-2. Run: `await LanguageModel.availability();`
-3. Should return `"available"`
+```bash
+# Reload extension
+chrome://extensions/ → Click refresh
 
-### 4. Load This Extension
+# Test on product pages
+# Check console for detailed logs
+```
 
-1. Open Chrome Canary
-2. Go to `chrome://extensions`
-3. Enable **Developer mode** (top right)
-4. Click **Load unpacked**
-5. Select the folder containing this extension
-6. Click the extension icon in the toolbar
+**See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for full guide.**
 
-## Quick Start
+---
 
-### Test the Sustainability Advisor
+## 📊 Technology Stack
 
-1. Visit any Amazon product page (e.g., clothing, phone cases, electronics)
-2. Open DevTools Console (F12)
-3. See sustainability analysis automatically generated
-4. Check `window.__sustainabilityAdvisorData` for extracted info
+- **Chrome Built-in AI APIs**:
+  - Prompt API (Gemini Nano) - Structured data extraction
+  - Summarizer API - Content analysis
+- **ES6 Modules**: Modern JavaScript architecture
+- **Shadow DOM**: CSS isolation
+- **Configuration-Driven**: JSON-based site configs
 
-### Test the AI Glass Interface
+### AI Usage
 
-1. Click the extension icon in toolbar
-2. Wait for "✅ AI is ready!" status
-3. Type a prompt (e.g., "Write a haiku about sustainability")
-4. Click "Stream Response" or "Get Response"
-5. Watch the AI generate a response!
+- **100% On-Device**: No data sent to servers
+- **Privacy-First**: Your browsing stays private
+- **Fast**: 5-10 second analysis
+- **Offline-Capable**: Works without internet (after model download)
 
-## Troubleshooting
+---
 
-- **"LanguageModel API not available"**: Make sure the flag is enabled and Chrome is relaunched
-- **"AI model is downloading"**: Wait for download to complete at `chrome://components`
-- **Error messages**: Check the console (F12) for detailed error information
+## 📚 Documentation
 
-## Documentation & Resources
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture and data flow
+- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Development guide and testing
+- **[docs/CHANGELOG.md](docs/CHANGELOG.md)** - Bug fixes and enhancements
+- **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** - UI design system
+- **[docs/SCORING.md](docs/SCORING.md)** - Sustainability scoring methodology
 
-- **[PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md)** - Complete technical documentation
-- [Prompt API Documentation](https://developer.chrome.com/docs/ai/prompt-api)
-- [Summarizer API Documentation](https://developer.chrome.com/docs/ai/summarizer-api)
-- [Chrome AI Challenge](https://googlechromeai2025.devpost.com/)
+---
 
-## License
+## 🐛 Troubleshooting
 
-Open source for the hackathon!
+### "AI not available"
+1. Check flags are enabled at `chrome://flags`
+2. Verify model downloaded at `chrome://components`
+3. Relaunch Chrome after enabling flags
 
+### "Overlay doesn't appear"
+1. Make sure you're on a product page (not search/homepage)
+2. Check console for errors (F12)
+3. Reload extension at `chrome://extensions/`
+
+### "Slow analysis"
+- First analysis: 15-30 seconds (model initialization)
+- Subsequent: 5-10 seconds (normal)
+- Gemini Nano runs on-device, speed varies by hardware
+
+**See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#troubleshooting) for more help.**
+
+---
+
+## 🎯 Roadmap
+
+- [x] Phase 1: Basic AI integration
+- [x] Phase 2: Intelligent extraction
+- [x] Phase 2.5: Configuration-driven architecture
+- [x] Phase 3: Structured data extraction
+- [x] Phase 4: Sustainability scoring
+- [x] Phase 5: Visual overlay UI
+- [ ] Phase 6: Multi-site support (eBay, Walmart, Target)
+- [ ] Phase 7: Browser extension store release
+
+**See [ideas/](ideas/) for future feature concepts.**
+
+---
+
+## 🤝 Contributing
+
+This project is open source for the Chrome Built-in AI Challenge 2025!
+
+- **Add new sites**: Create site configs in `src/config/sites/`
+- **Improve scoring**: Update `src/data/sustainability_matrix.csv`
+- **Report bugs**: Open an issue with details
+
+---
+
+## 📜 License
+
+Open source for educational and hackathon purposes.
+
+---
+
+## 🔗 Resources
+
+- **Chrome AI Challenge**: https://googlechromeai2025.devpost.com/
+- **Prompt API Docs**: https://developer.chrome.com/docs/ai/prompt-api
+- **Summarizer API Docs**: https://developer.chrome.com/docs/ai/summarizer-api
+- **Chrome AI Preview**: https://developer.chrome.com/docs/ai/built-in
+
+---
+
+**Built with ❤️ for Chrome Built-in AI Challenge 2025**
+
+*Envairo helps you make informed, sustainable shopping decisions.*

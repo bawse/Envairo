@@ -14,9 +14,23 @@
   "host_permissions": [
     "<all_urls>"
   ],
+  "icons": {
+    "16": "src/icons/icon-16.png",
+    "32": "src/icons/icon-32.png",
+    "48": "src/icons/icon-48.png",
+    "64": "src/icons/icon-64.png",
+    "128": "src/icons/icon-128.png"
+  },
   "action": {
     "default_popup": "src/popup.html",
-    "default_title": "Envairo Settings"
+    "default_title": "Envairo Settings",
+    "default_icon": {
+      "16": "src/icons/icon-16.png",
+      "32": "src/icons/icon-32.png",
+      "48": "src/icons/icon-48.png",
+      "64": "src/icons/icon-64.png",
+      "128": "src/icons/icon-128.png"
+    }
   },
   "background": {
     "service_worker": "src/bg.js"
@@ -45,7 +59,8 @@
         "src/config/**/*.json",
         "src/core/*.js",
         "src/utils/*.js",
-        "src/data/*.csv"
+        "src/data/*.csv",
+        "src/icons/*.png"
       ],
       "matches": ["<all_urls>"]
     }
