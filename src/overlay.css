@@ -42,7 +42,7 @@
 }
 
 .ai-glass-container.pos-bottom-right{
-  bottom: 108px; /* Float above the button: 64px button + 24px button offset + 20px gap */
+  bottom: 98px; /* Float above the button: 64px button + 24px button offset + 10px gap */
   right: 24px; /* Align with button's right edge */
   top: auto;
   left: auto;

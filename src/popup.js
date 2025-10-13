@@ -112,10 +112,12 @@ function updateStats(history) {
   // Update count
   const totalElement = document.getElementById('totalAnalyzed');
   totalElement.innerHTML = `
-    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    ${totalAnalyzed}
+    <div class="stat-value">
+      <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      ${totalAnalyzed}
+    </div>
   `;
   
   // Update average score with visual indicator
@@ -128,7 +130,7 @@ function updateStats(history) {
       </div>
     `;
   } else {
-    avgElement.textContent = '—';
+    avgElement.innerHTML = `<div class="stat-value">—</div>`;
   }
 }
 
