@@ -18,6 +18,9 @@ console.log('[AI Glass Overlay] Content script loaded (configuration-driven arch
 // Global state to track if analysis is currently running
 let isAnalysisRunning = false;
 
+// Global reference to progress animation (for cancellation)
+let currentProgressAnimation = null;
+
 /**
  * Initialize and run sustainability analysis with UI integration
  * Uses dynamic import for Chrome extension compatibility
@@ -190,8 +193,8 @@ async function showFloatingProgressButton(phase) {
   }
   
   // Animate progress from 0 to 95% (we'll complete at 100% when results come)
-  // Slower animations for better UX
-  animateProgress(0, 95, phase === 'extracting' ? 4000 : 6000);
+  // Spread over 15-20 seconds to match actual AI analysis time
+  animateProgress(0, 95, phase === 'extracting' ? 8000 : 15000);
 }
 
 /**
@@ -205,6 +208,11 @@ async function animateProgress(start, end, duration) {
     chrome.runtime.getURL('src/utils/uiComponents.js')
   );
   
+  // Cancel any existing animation
+  if (currentProgressAnimation) {
+    cancelAnimationFrame(currentProgressAnimation);
+  }
+  
   const startTime = Date.now();
   const progressDiff = end - start;
   
@@ -212,18 +220,33 @@ async function animateProgress(start, end, duration) {
     const elapsed = Date.now() - startTime;
     const progress = Math.min(elapsed / duration, 1);
     
-    // Ease out cubic for smooth animation
-    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    // Use ease-in-out for smoother, more gradual progress
+    // This prevents the "stuck at 95%" appearance
+    const easeProgress = progress < 0.5
+      ? 2 * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 2) / 2;
     const currentProgress = start + (progressDiff * easeProgress);
     
     updateFloatingProgress(currentProgress);
     
     if (progress < 1) {
-      requestAnimationFrame(update);
+      currentProgressAnimation = requestAnimationFrame(update);
+    } else {
+      currentProgressAnimation = null;
     }
   }
   
-  requestAnimationFrame(update);
+  currentProgressAnimation = requestAnimationFrame(update);
+}
+
+/**
+ * Stop the progress animation immediately
+ */
+function stopProgressAnimation() {
+  if (currentProgressAnimation) {
+    cancelAnimationFrame(currentProgressAnimation);
+    currentProgressAnimation = null;
+  }
 }
 
 /**
@@ -233,13 +256,16 @@ async function convertToToggleButton() {
   const progressHost = document.getElementById('envairo-progress-host');
   if (!progressHost) return;
   
+  // Stop any ongoing animation and jump to 100%
+  stopProgressAnimation();
+  
   // Complete to 100% first
   try {
     const { updateFloatingProgress, convertButtonToToggle } = await import(
       chrome.runtime.getURL('src/utils/uiComponents.js')
     );
     
-    // Animate to 100%
+    // Jump to 100%
     updateFloatingProgress(100);
     
     // After brief delay, convert to toggle button
@@ -775,4 +801,5 @@ async function showNotProductPageMessage() {
   sustainabilityHost._container.classList.add('is-open');
 }
 
+console.log('[Overlay] Message listener registered for sustainability overlay toggle');
 console.log('[Overlay] Message listener registered for sustainability overlay toggle');
