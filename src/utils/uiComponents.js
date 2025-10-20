@@ -154,7 +154,7 @@ export function createScoreRing(score, tier) {
   const container = document.createElement('div');
   container.className = 'score-ring-container animate-scale-in';
   
-  const radius = 58;
+  const radius = 38; // Reduced to fit 90px container
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
   const remaining = circumference - progress;
@@ -190,13 +190,13 @@ export function createScoreRing(score, tier) {
   
   container.innerHTML = `
     <div class="score-ring">
-      <svg viewBox="0 0 140 140">
+      <svg viewBox="0 0 90 90">
         ${gradients}
-        <circle class="score-ring-bg" cx="70" cy="70" r="${radius}"/>
+        <circle class="score-ring-bg" cx="45" cy="45" r="${radius}"/>
         <circle 
           class="score-ring-progress tier-${tierClass}" 
-          cx="70" 
-          cy="70" 
+          cx="45" 
+          cy="45" 
           r="${radius}"
           stroke-dasharray="${circumference}"
           stroke-dashoffset="${remaining}"
@@ -619,11 +619,14 @@ export function buildSustainabilityPanel(data) {
   const panel = document.createElement('div');
   panel.className = 'sustainability-panel';
   
-  // Score ring
-  panel.appendChild(createScoreRing(data.score.overall, data.score.tier));
+  // Top section: Score ring + Breakdown in two columns
+  const topSection = document.createElement('div');
+  topSection.className = 'panel-top-section';
   
-  // Breakdown
-  panel.appendChild(createBreakdownCard(data.score.breakdown));
+  topSection.appendChild(createScoreRing(data.score.overall, data.score.tier));
+  topSection.appendChild(createBreakdownCard(data.score.breakdown));
+  
+  panel.appendChild(topSection);
   
   // Materials (card returns null if no materials)
   const materialsCard = createMaterialsCard(data.extracted.materials);

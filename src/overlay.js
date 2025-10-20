@@ -58,11 +58,8 @@ async function initializeSustainabilityAdvisor() {
       // Is a product page
       window._isProductPage = true;
       
-      // Show loading overlay
-      showSustainabilityOverlay('loading', 'extracting');
-      
-      // Update loading state
-      showSustainabilityOverlay('loading', 'analyzing');
+      // Show loading overlay (extracting phase)
+      await showSustainabilityOverlay('loading', 'extracting');
       
       // Analyze current page (automatically detects site and extracts)
       const result = await sustainabilityAdvisor.analyzeCurrentPage();
@@ -169,16 +166,24 @@ async function showFloatingProgressButton(phase) {
     // Create shadow DOM for progress button
     progressHost = document.createElement('div');
     progressHost.id = 'envairo-progress-host';
-    progressHost.style.all = 'initial';
+    progressHost.style.cssText = 'all: initial; display: block; position: fixed; pointer-events: none; z-index: 2147483647; top: 0; left: 0; width: 100%; height: 100%;';
     document.documentElement.appendChild(progressHost);
     
     const shadow = progressHost.attachShadow({ mode: 'open' });
     
-    // Load CSS
+    // Load CSS and wait for it to be ready
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = chrome.runtime.getURL('src/overlay.css');
-    shadow.appendChild(link);
+    
+    // Wait for CSS to load before proceeding
+    await new Promise((resolve) => {
+      link.onload = resolve;
+      link.onerror = resolve; // Resolve even on error to avoid hanging
+      shadow.appendChild(link);
+      // Fallback timeout in case onload never fires
+      setTimeout(resolve, 100);
+    });
     
     // Import and create floating button
     const { createFloatingProgressButton } = await import(
@@ -188,8 +193,17 @@ async function showFloatingProgressButton(phase) {
     const button = createFloatingProgressButton(0);
     shadow.appendChild(button);
     
+    // Ensure button is visible
+    progressHost.style.display = 'block';
+    
     progressHost._shadow = shadow;
     progressHost._button = button;
+    
+    console.log('[Overlay] Floating button created and visible');
+  } else {
+    // Button already exists, make sure it's visible
+    progressHost.style.display = 'block';
+    console.log('[Overlay] Floating button already exists, ensuring visibility');
   }
   
   // Animate progress from 0 to 95% (we'll complete at 100% when results come)
@@ -577,14 +591,14 @@ function showOverlayAndButton() {
   // Show floating button
   const progressHost = document.getElementById('envairo-progress-host');
   if (progressHost) {
-    progressHost.style.display = '';
+    progressHost.style.display = 'block';
     console.log('[Overlay] Floating button shown');
   }
   
   // Show main overlay (but keep it closed initially)
   const sustainabilityHost = document.getElementById('sustainability-overlay-host');
   if (sustainabilityHost) {
-    sustainabilityHost.style.display = '';
+    sustainabilityHost.style.display = 'block';
     console.log('[Overlay] Main overlay container shown');
   }
 }
