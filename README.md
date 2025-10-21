@@ -15,6 +15,31 @@
   
 </div>
 
+<div align="center">
+  
+### 📺 Demo Video
+
+<a href="https://youtu.be/U2rgG6BHh5w">
+  <img src="https://img.youtube.com/vi/U2rgG6BHh5w/maxresdefault.jpg" alt="Envairo Demo Video" width="600" />
+</a>
+
+*[Click to watch the full demo on YouTube](https://youtu.be/U2rgG6BHh5w)*
+
+</div>
+
+<div align="center">
+  <table>
+    <tr>
+      <td width="50%">
+        <img src="screenshots/overlay.png" alt="Sustainability overlay on product page" width="100%" style="max-height: 400px; object-fit: contain;" />
+      </td>
+      <td width="50%">
+        <img src="screenshots/popup.png" alt="Extension popup" width="100%" style="max-height: 400px; object-fit: contain;" />
+      </td>
+    </tr>
+  </table>
+</div>
+
 ---
 
 ## The Problem
