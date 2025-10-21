@@ -22,10 +22,8 @@ export class SustainabilityAdvisor {
     if (this.initialized) return;
 
     try {
-      console.log('[SustainabilityAdvisor] Initializing...');
       await configLoader.initialize();
       this.initialized = true;
-      console.log('[SustainabilityAdvisor] Ready');
     } catch (error) {
       console.error('[SustainabilityAdvisor] Initialization failed:', error);
       throw error;
@@ -41,8 +39,7 @@ export class SustainabilityAdvisor {
     const detection = configLoader.detectSite(url);
 
     if (detection) {
-      console.log(`[SustainabilityAdvisor] ✅ Product detected: ${detection.config.name}`);
-      console.log(`[SustainabilityAdvisor] Product ID: ${detection.productId}`);
+      console.log(`[Envairo] Product detected: ${detection.config.name} (ID: ${detection.productId})`);
       this.currentSite = detection;
       return detection;
     }
@@ -61,7 +58,6 @@ export class SustainabilityAdvisor {
 
     // Prevent duplicate runs
     if (this.isRunning || this.hasRun) {
-      console.log('[SustainabilityAdvisor] Analysis already running or completed');
       return null;
     }
 
@@ -72,22 +68,19 @@ export class SustainabilityAdvisor {
       // Detect product page
       const detection = this.detectProductPage();
       if (!detection) {
-        console.log('[SustainabilityAdvisor] Not a supported product page');
         return null;
       }
 
       // Extract content using config
-      console.log('[SustainabilityAdvisor] 🚀 Starting content extraction...');
       const extractor = new ContentExtractor(detection.config);
       const sections = extractor.extractSections();
 
       if (!sections || sections.length === 0) {
-        console.warn('[SustainabilityAdvisor] ⚠️ No relevant sections found');
+        console.warn('[Envairo] No relevant sections found');
         return null;
       }
 
       const extractionTime = ((performance.now() - startTime) / 1000).toFixed(2);
-      console.log(`[SustainabilityAdvisor] ⚡ Extraction completed in ${extractionTime}s`);
 
       // Prepare for AI analysis
       const analyzer = new AIAnalyzer(detection.config);
@@ -102,55 +95,23 @@ export class SustainabilityAdvisor {
 
       const selection = extractor.selectSectionsForAnalysis(sections, targetChars);
       
-      console.log(`[SustainabilityAdvisor] Selected ${selection.selected.length} sections (${selection.totalChars} chars)`);
-      
-      // Log selected sections
-      this.logSelectedSections(selection.selected);
+      console.log(`[Envairo] Selected ${selection.selected.length} sections (${selection.totalChars} chars)`);
 
       // Analyze with AI (pass sections array, not focusedContent string)
-      console.log('[SustainabilityAdvisor] 🤖 Starting AI analysis with scoring...');
       const analysisResult = await analyzer.analyzeSustainability(selection.selected);
 
       if (!analysisResult.success) {
-        console.warn('[SustainabilityAdvisor] ⚠️ Analysis failed:', analysisResult.error);
+        console.error('[Envairo] Analysis failed:', analysisResult.error);
         return this.createFailureResult(detection, analysisResult.error);
       }
 
       // Log results
-      console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(`[SustainabilityAdvisor] 🌱 SUSTAINABILITY SCORE: ${analysisResult.score.overall}/100 (${analysisResult.score.tier})`);
-      console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('[SustainabilityAdvisor] 📊 BREAKDOWN:');
-      console.log(`[SustainabilityAdvisor]    Material Score: ${analysisResult.score.breakdown.base_material_score}`);
-      console.log(`[SustainabilityAdvisor]    Certifications: +${analysisResult.score.breakdown.certification_bonus}`);
-      console.log(`[SustainabilityAdvisor]    Durability: +${analysisResult.score.breakdown.durability_bonus}`);
-      console.log(`[SustainabilityAdvisor]    Packaging: +${analysisResult.score.breakdown.packaging_bonus}`);
-      console.log(`[SustainabilityAdvisor]    Circularity: ${analysisResult.score.breakdown.circularity_penalty}`);
-      console.log('[SustainabilityAdvisor]');
-      console.log('[SustainabilityAdvisor] ✅ STRENGTHS:');
-      if (analysisResult.score.strengths && Array.isArray(analysisResult.score.strengths)) {
-        analysisResult.score.strengths.forEach(s => 
-          console.log(`[SustainabilityAdvisor]    • ${s}`)
-        );
-      } else {
-        console.log('[SustainabilityAdvisor]    (none provided)');
-      }
-      console.log('[SustainabilityAdvisor]');
-      console.log('[SustainabilityAdvisor] ⚠️ CONCERNS:');
-      if (analysisResult.score.concerns && Array.isArray(analysisResult.score.concerns)) {
-        analysisResult.score.concerns.forEach(c => 
-          console.log(`[SustainabilityAdvisor]    • ${c}`)
-        );
-      } else {
-        console.log('[SustainabilityAdvisor]    (none provided)');
-      }
-      console.log('[SustainabilityAdvisor]');
-      console.log('[SustainabilityAdvisor] 💡 RECOMMENDATION:');
-      console.log(`[SustainabilityAdvisor]    ${analysisResult.score.recommendation || 'No recommendation provided'}`);
-      console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('[Envairo] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`[Envairo] 🌱 SCORE: ${analysisResult.score.overall}/100 (${analysisResult.score.tier})`);
+      console.log('[Envairo] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
-      console.log(`[SustainabilityAdvisor] 🎉 Complete! Total: ${totalTime}s (Extract: ${extractionTime}s + Analysis: ${analysisResult.duration}s)`);
+      console.log(`[Envairo] ✅ Complete in ${totalTime}s (Extract: ${extractionTime}s, Analysis: ${analysisResult.duration}s)`);
 
       // Build result
       const result = this.createSuccessResult(
@@ -174,24 +135,6 @@ export class SustainabilityAdvisor {
     } finally {
       this.isRunning = false;
     }
-  }
-
-  /**
-   * Log selected sections with details
-   */
-  logSelectedSections(sections) {
-    console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('[SustainabilityAdvisor] 📄 SELECTED SECTIONS:');
-    console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
-    sections.forEach((section, idx) => {
-      const label = section.label || section.selector || section.heading || 'Unknown';
-      const preview = (section.text || '').substring(0, 150).replace(/\n/g, ' ');
-      console.log(`[SustainabilityAdvisor] ${idx + 1}. [Score: ${section.score.toFixed(2)}] ${label}`);
-      console.log(`[SustainabilityAdvisor]    ${preview}...`);
-    });
-    
-    console.log('[SustainabilityAdvisor] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
 
   /**
@@ -253,9 +196,6 @@ export class SustainabilityAdvisor {
     if (typeof self !== 'undefined') {
       self.__sustainabilityAdvisorData = result;
     }
-    
-    console.log('[SustainabilityAdvisor] 💾 Result stored');
-    console.log('[SustainabilityAdvisor] 💡 Access with: window.__sustainabilityAdvisorData');
   }
 
   /**

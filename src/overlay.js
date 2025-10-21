@@ -9,12 +9,6 @@
  * NOTE: Uses dynamic imports for Chrome extension compatibility
  */
 
-console.log('[AI Glass Overlay] Content script loaded (configuration-driven architecture)');
-
-// ============================================================================
-// SUSTAINABILITY ADVISOR: Configuration-Driven Product Analysis
-// ============================================================================
-
 // Global state to track if analysis is currently running
 let isAnalysisRunning = false;
 
@@ -29,7 +23,6 @@ async function initializeSustainabilityAdvisor() {
   const runAnalysis = async () => {
     // Prevent race conditions from multiple strategies
     if (isAnalysisRunning) {
-      console.log('[Overlay] Analysis already running, skipping...');
       return;
     }
     isAnalysisRunning = true;
@@ -48,7 +41,6 @@ async function initializeSustainabilityAdvisor() {
       
       if (!detection) {
         // Not a product page - don't show overlay automatically
-        console.log('[Overlay] Not a product page, overlay will remain hidden');
         // Store state for manual toggle
         window._isProductPage = false;
         isAnalysisRunning = false; // Allow retry if page changes
@@ -66,13 +58,12 @@ async function initializeSustainabilityAdvisor() {
       
       // Display results if successful
       if (result && result.success) {
-        console.log('[Overlay] Analysis complete, displaying results...');
         showSustainabilityOverlay('results', result);
         
         // Save to history and notify popup
         saveProductToHistory(result);
       } else if (result && result.error) {
-        console.warn('[Overlay] Analysis failed:', result.error);
+        console.error('[Overlay] Analysis failed:', result.error);
         showSustainabilityOverlay('error', result.error);
       }
     
@@ -119,8 +110,6 @@ async function saveProductToHistory(result) {
       timestamp: Date.now()
     };
     
-    console.log('[Overlay] Saving product to history:', productData);
-    
     // Load existing history
     const storage = await chrome.storage.local.get('productHistory');
     let history = storage.productHistory || [];
@@ -145,10 +134,7 @@ async function saveProductToHistory(result) {
       });
     } catch (error) {
       // Popup might not be open, that's okay
-      console.log('[Overlay] Popup not listening (that\'s okay)');
     }
-    
-    console.log('[Overlay] Product saved to history successfully');
   } catch (error) {
     console.error('[Overlay] Failed to save product to history:', error);
   }
@@ -198,12 +184,9 @@ async function showFloatingProgressButton(phase) {
     
     progressHost._shadow = shadow;
     progressHost._button = button;
-    
-    console.log('[Overlay] Floating button created and visible');
   } else {
     // Button already exists, make sure it's visible
     progressHost.style.display = 'block';
-    console.log('[Overlay] Floating button already exists, ensuring visibility');
   }
   
   // Animate progress from 0 to 95% (we'll complete at 100% when results come)
@@ -309,9 +292,9 @@ async function convertToToggleButton() {
           }
         };
       }
-    }, 500);
+      }, 500);
   } catch (e) {
-    console.log('[Overlay] Could not update button:', e);
+    console.error('[Overlay] Could not update button:', e);
   }
 }
 
@@ -334,7 +317,6 @@ async function showSustainabilityOverlay(state, data) {
   let sustainabilityHost = document.getElementById('sustainability-overlay-host');
   
   if (!sustainabilityHost) {
-    console.log('[Sustainability Overlay] Creating overlay container...');
     sustainabilityHost = document.createElement('div');
     sustainabilityHost.id = 'sustainability-overlay-host';
     sustainabilityHost.style.all = 'initial';
@@ -491,10 +473,6 @@ async function checkUrlChange() {
   const currentUrl = window.location.href;
   
   if (currentUrl !== lastUrl) {
-    console.log('[Overlay] URL changed, checking if still on product page...');
-    console.log('[Overlay] Old URL:', lastUrl);
-    console.log('[Overlay] New URL:', currentUrl);
-    
     lastUrl = currentUrl;
     
     try {
@@ -512,7 +490,6 @@ async function checkUrlChange() {
       
       if (!detection) {
         // No longer on a product page - hide the overlay and button
-        console.log('[Overlay] Not a product page anymore, hiding overlay...');
         hideOverlayAndButton();
         window._isProductPage = false;
         
@@ -520,7 +497,6 @@ async function checkUrlChange() {
         sustainabilityAdvisor.reset();
       } else if (window._isProductPage === false) {
         // Navigated FROM non-product page TO product page
-        console.log('[Overlay] Navigated to product page from non-product page');
         sustainabilityAdvisor.reset();
         window._isProductPage = true;
         isAnalysisRunning = false; // Reset analysis flag
@@ -532,14 +508,9 @@ async function checkUrlChange() {
         }, 500);
       } else {
         // Navigated to a different product page
-        console.log('[Overlay] New product page detected:', detection.config.name);
-        console.log('[Overlay] Product ID:', detection.productId);
-        
         // Check if it's a different product
         const oldProductId = window.__sustainabilityAdvisorData?.productId;
         if (oldProductId !== detection.productId) {
-          console.log('[Overlay] Different product detected, resetting for new analysis...');
-          
           // Hide current overlay
           hideOverlayAndButton();
           
@@ -553,7 +524,6 @@ async function checkUrlChange() {
             initializeSustainabilityAdvisor();
           }, 500); // Small delay to let page finish loading
         } else {
-          console.log('[Overlay] Same product, keeping current overlay');
           // Make sure overlay is visible in case it was hidden
           showOverlayAndButton();
         }
@@ -572,7 +542,6 @@ function hideOverlayAndButton() {
   const progressHost = document.getElementById('envairo-progress-host');
   if (progressHost) {
     progressHost.style.display = 'none';
-    console.log('[Overlay] Floating button hidden');
   }
   
   // Hide main overlay
@@ -580,7 +549,6 @@ function hideOverlayAndButton() {
   if (sustainabilityHost && sustainabilityHost._container) {
     sustainabilityHost._container.classList.remove('is-open');
     sustainabilityHost.style.display = 'none';
-    console.log('[Overlay] Main overlay hidden');
   }
 }
 
@@ -592,14 +560,12 @@ function showOverlayAndButton() {
   const progressHost = document.getElementById('envairo-progress-host');
   if (progressHost) {
     progressHost.style.display = 'block';
-    console.log('[Overlay] Floating button shown');
   }
   
   // Show main overlay (but keep it closed initially)
   const sustainabilityHost = document.getElementById('sustainability-overlay-host');
   if (sustainabilityHost) {
     sustainabilityHost.style.display = 'block';
-    console.log('[Overlay] Main overlay container shown');
   }
 }
 
@@ -607,7 +573,6 @@ function showOverlayAndButton() {
 
 // Strategy 1: Listen for popstate (back/forward buttons)
 window.addEventListener('popstate', () => {
-  console.log('[Overlay] popstate event detected');
   setTimeout(checkUrlChange, 100);
 });
 
@@ -617,21 +582,17 @@ const originalReplaceState = history.replaceState;
 
 history.pushState = function(...args) {
   originalPushState.apply(this, args);
-  console.log('[Overlay] pushState detected');
   setTimeout(checkUrlChange, 100);
 };
 
 history.replaceState = function(...args) {
   originalReplaceState.apply(this, args);
-  console.log('[Overlay] replaceState detected');
   setTimeout(checkUrlChange, 100);
 };
 
 // Strategy 3: Poll for URL changes (fallback for edge cases)
 // This catches any navigation we might have missed
 setInterval(checkUrlChange, 2000);
-
-console.log('[Overlay] URL change monitoring active');
 
 // ============================================================================
 // END SUSTAINABILITY ADVISOR
@@ -645,8 +606,6 @@ console.log('[Overlay] URL change monitoring active');
  * Listen for keyboard shortcut to toggle sustainability overlay
  */
 chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
-  console.log('[Overlay] Received message:', msg);
-  
   if (msg?.type === 'TOGGLE_GLASS') {
     const sustainabilityHost = document.getElementById('sustainability-overlay-host');
     
@@ -671,7 +630,6 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
         }
       }
       
-      console.log('[Overlay] Overlay toggled:', wasOpen ? 'open->closed' : 'closed->open');
       sendResponse({ success: true, isOpen });
       return true;
     }
@@ -681,7 +639,6 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
     // Check if detection has completed
     if (window._isProductPage === false) {
       // Detected as not a product page - show informative message
-      console.log('[Overlay] Not on product page, showing info message');
       await showNotProductPageMessage();
       sendResponse({ success: true, isOpen: true, isProductPage: false });
       return true;
@@ -690,7 +647,6 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
     // If still initializing, try to detect now
     if (window._isProductPage === undefined) {
       try {
-        console.log('[Overlay] Detection not complete, checking now...');
         const { sustainabilityAdvisor } = await import(
           chrome.runtime.getURL('src/core/SustainabilityAdvisor.js')
         );
@@ -710,7 +666,6 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
     }
     
     // If we get here, something went wrong
-    console.warn('[Overlay] Sustainability overlay not initialized - may not be a product page');
     sendResponse({ success: false, message: 'Overlay not available on this page' });
   }
   
@@ -725,7 +680,6 @@ async function showNotProductPageMessage() {
   let sustainabilityHost = document.getElementById('sustainability-overlay-host');
   
   if (!sustainabilityHost) {
-    console.log('[Overlay] Creating overlay for non-product page message...');
     sustainabilityHost = document.createElement('div');
     sustainabilityHost.id = 'sustainability-overlay-host';
     sustainabilityHost.style.all = 'initial';
@@ -814,6 +768,3 @@ async function showNotProductPageMessage() {
   // Make sure it's visible
   sustainabilityHost._container.classList.add('is-open');
 }
-
-console.log('[Overlay] Message listener registered for sustainability overlay toggle');
-console.log('[Overlay] Message listener registered for sustainability overlay toggle');

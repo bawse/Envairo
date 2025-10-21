@@ -27,7 +27,7 @@ export class ConfigLoader {
       }
 
       this.initialized = true;
-      console.log(`[ConfigLoader] Loaded ${this.configs.size} site configuration(s)`);
+      console.log(`[ConfigLoader] Loaded ${this.configs.size} site config(s)`);
     } catch (error) {
       console.error('[ConfigLoader] Failed to initialize:', error);
       throw error;
@@ -57,9 +57,6 @@ export class ConfigLoader {
       // Only store enabled configs
       if (config.enabled !== false) {
         this.configs.set(config.id, config);
-        console.log(`[ConfigLoader] Loaded config: ${config.name} (v${config.version})`);
-      } else {
-        console.log(`[ConfigLoader] Skipped disabled config: ${config.name}`);
       }
     } catch (error) {
       console.error(`[ConfigLoader] Error loading ${configFile}:`, error);

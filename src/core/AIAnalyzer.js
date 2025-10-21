@@ -24,8 +24,6 @@ export class AIAnalyzer {
       
       this.scoringMatrix = await loadScoringMatrix();
       this.matrixLoaded = true;
-      
-      console.log(`[AIAnalyzer] Loaded ${this.scoringMatrix.length} materials`);
     } catch (error) {
       console.error('[AIAnalyzer] Failed to load matrix:', error);
       throw error;
@@ -77,7 +75,7 @@ export class AIAnalyzer {
         };
       }
       
-      console.log(`[AIAnalyzer] Prompt API ready (temp: ${defaultTemperature}, topK: ${defaultTopK})`);
+      console.log(`[Envairo] AI ready (temp: ${defaultTemperature}, topK: ${defaultTopK})`);
       
       // Create session with scoring-optimized parameters
       const session = await LanguageModel.create({
@@ -86,25 +84,22 @@ export class AIAnalyzer {
         topK: Math.min(10, maxTopK)  // Low topK for stable, repeatable scores
       });
       
-      console.log(`[AIAnalyzer] Session created (quota: ${session.inputQuota} tokens)`);
-      
       // Build prompt with product content + matrix
       const prompt = this.buildScoringPrompt(sections, this.scoringMatrix);
       
       // Measure prompt size
       const promptUsage = await session.measureInputUsage(prompt);
-      console.log(`[AIAnalyzer] Prompt size: ${promptUsage} / ${session.inputQuota} tokens`);
+      console.log(`[Envairo] Analyzing... (${promptUsage} / ${session.inputQuota} tokens)`);
       
       if (promptUsage > session.inputQuota) {
-        console.warn('[AIAnalyzer] ⚠️ Prompt exceeds quota! Attempting anyway...');
+        console.warn('[Envairo] Warning: Prompt exceeds quota');
       }
       
       // Get response
-      console.log('[AIAnalyzer] 🤖 Prompting model...');
       const response = await session.prompt(prompt);
       
       const duration = ((performance.now() - startTime) / 1000).toFixed(2);
-      console.log(`[AIAnalyzer] ✅ Response received in ${duration}s`);
+      console.log(`[Envairo] AI analysis complete (${duration}s)`);
       
       // Clean up session
       session.destroy();
@@ -138,11 +133,8 @@ export class AIAnalyzer {
         if (result.extracted.materials && result.extracted.materials.length > 0) {
           const totalPercentage = result.extracted.materials.reduce((sum, m) => sum + (m.percentage || 0), 0);
           
-          console.log(`[AIAnalyzer] 📊 Material validation: ${result.extracted.materials.length} materials, total percentage: ${totalPercentage}`);
-          
           // If percentages are in 0-100 range instead of 0-1, normalize them
           if (totalPercentage > 2) {
-            console.warn('[AIAnalyzer] ⚠️ Percentages appear to be in 0-100 range, normalizing to 0-1...');
             result.extracted.materials = result.extracted.materials.map(m => ({
               ...m,
               percentage: (m.percentage || 0) / 100
@@ -152,26 +144,12 @@ export class AIAnalyzer {
           // If percentages don't sum to ~1.0, normalize them
           const newTotal = result.extracted.materials.reduce((sum, m) => sum + (m.percentage || 0), 0);
           if (Math.abs(newTotal - 1.0) > 0.05 && newTotal > 0) {
-            console.warn(`[AIAnalyzer] ⚠️ Percentages don't sum to 1.0 (sum: ${newTotal}), normalizing...`);
             result.extracted.materials = result.extracted.materials.map(m => ({
               ...m,
               percentage: (m.percentage || 0) / newTotal
             }));
           }
-          
-          // Log final percentages
-          result.extracted.materials.forEach(m => {
-            console.log(`[AIAnalyzer]   - ${m.name}: ${(m.percentage * 100).toFixed(1)}%`);
-          });
         }
-        
-        console.log('[AIAnalyzer] ✅ Parsed result:', {
-          materials: result.extracted.materials.length,
-          certifications: result.extracted.certifications.length,
-          strengths: result.score.strengths.length,
-          concerns: result.score.concerns.length,
-          hasRecommendation: !!result.score.recommendation
-        });
         
         return {
           ...result,
@@ -182,8 +160,7 @@ export class AIAnalyzer {
         };
         
       } catch (parseError) {
-        console.error('[AIAnalyzer] ❌ JSON parse failed:', parseError);
-        console.log('[AIAnalyzer] Raw response (first 500 chars):', response.substring(0, 500));
+        console.error('[AIAnalyzer] JSON parse failed:', parseError);
         
         return {
           error: 'Failed to parse AI response as JSON',
@@ -194,7 +171,7 @@ export class AIAnalyzer {
       }
       
     } catch (error) {
-      console.error('[AIAnalyzer] ❌ Error:', error);
+      console.error('[AIAnalyzer] Error:', error);
       return {
         error: error.message,
         success: false

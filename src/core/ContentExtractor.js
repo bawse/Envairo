@@ -5,7 +5,6 @@
 export class ContentExtractor {
   constructor(config) {
     this.config = config;
-    this.debug = false;
   }
 
   /**
@@ -13,10 +12,6 @@ export class ContentExtractor {
    * @returns {Array} Array of extracted sections with scores
    */
   extractSections() {
-    if (this.debug) {
-      console.log('[ContentExtractor] Starting extraction...');
-    }
-
     const sections = [];
 
     // Phase 1: Always-include selectors (no filtering)
@@ -34,7 +29,7 @@ export class ContentExtractor {
     // Rank by score
     const rankedSections = this.rankSections(uniqueSections);
 
-    console.log(`[ContentExtractor] Extracted ${rankedSections.length} unique sections`);
+    console.log(`[ContentExtractor] Extracted ${rankedSections.length} sections`);
     
     return rankedSections;
   }
@@ -306,8 +301,6 @@ export class ContentExtractor {
     const otherSections = sections.filter(s => 
       !s.selector || !criticalSelectors.includes(s.selector)
     );
-
-    console.log(`[ContentExtractor] Selecting from ${criticalSections.length} critical, ${otherSections.length} other sections`);
 
     let focusedContent = '';
     let totalChars = 0;
